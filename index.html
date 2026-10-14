@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>>_ madpomo</title>
+    <link rel="stylesheet" href="madpomo.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <p class="header__brand">>_ madpomo</p>
+            <nav class="header__nav">
+            <p class="header__date">monday . 13/10/2026 . 12h24</p>
+            <span class="header__sep" aria-hidden="true">|</span>
+            <a href="settings.html" class="header__link">settings</a>
+            <span class="header__sep" aria-hidden="true">|</span>
+            <a href="about.html" class="header__link">about</a>
+        </nav>
+        </header>
+        <aside class="sidebar">
+            <div class="sidebar__section timer">
+                <div class="timer__info">
+                    <h2 class="sidebar__title">//focus | #3 of 4</h2>
+                    <p class="sidebar__subtitle">current task: design onboarding</p>
+                    <p class="timer__clock">00:00</p>
+                </div>
+                <ul class="timer__actions">
+                    <li><button type="button" class="btn btn--primary">start</button></li>
+                    <li><button type="button" class="btn">reset</button></li>
+                    <li><button type="button" class="btn">break</button></li>
+                </ul>
+            </div>
+            <div class="sidebar__section">
+                <h2 class="sidebar__title">//task overview</h2>
+                <div class="stat">
+                    <p class="stat__name">today</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">this week</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">this month</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">cancelled tasks</p>
+                    <p class="stat__value">0</p>
+                </div>
+            </div>
+            <div class="sidebar__section history">
+                
+                <h2 class="sidebar__title">//last 7D</h2>
+                <div class="history__row">
+                    <p class="history__day">MON</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">5</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">TUE</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">4</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">WED</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">1</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">THU</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">8</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">FRI</p>
+                    <div class="history__cells">
+                    </div>
+                    <p class="history__count">0</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">SAT</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">1</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">SUN</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">2</p>
+                </div>
+                 <a href="report.html" class="btn history__report">pomodoro report</a>
+            </div>
+        </aside>
+        <main class="main">
+            <section class="toolbar">
+                <h1 class="toolbar__title">MY BOARD</h1>
+                <div class="toolbar__actions">
+                    <div class="search"><input type="search" class="search__input" placeholder="/ search tasks" aria-label="search tasks"></div>
+                <button type="button" class="btn btn--primary">+column</button>
+                </div>
+            </section>
+            <section class="board" aria-label="task board">
+                <div class="column">
+                    <div class="column__head">
+                        <div class="column__title">
+                            to do
+                            <span class="column__count">(3)</span>
+                        </div>
+                        <div class="column__tools">
+                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
+                            <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 1</p>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 2</p>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="true">
+                        <input type="checkbox" id="task-3-toggle" class="task__toggle" hidden>
+                        <div class="task__head">
+                            <label for="task-3-toggle" class="task__head-label">task 3</label>
+                            <div class="task__actions">
+                                <button type="button" class="btn btn--danger" aria-label="delete task">x</button>
+                            </div>
+                        </div>
+                        <div class="task__body">
+                            <p class="task__due">due date: 16/10/2026 | 18h00</p>
+                            <p class="task__notes">lorem ipsum dolor sit amet, consectetur adipiscing elit. nunc non erat quam. duis feugiat neque vitae hendrerit maximus.</p>
+                            <ul class="checklist">
+                                <li class="checklist__item">
+                                    <input type="checkbox" id="task-1" class="checklist__input" hidden>
+                                    <label for="task-1" class="checklist__item-text"><span class="checklist__item-label">subtask 1</span></label>
+                                </li>
+                                <li class="checklist__item">
+                                    <input type="checkbox" id="task-2" class="checklist__input" hidden>
+                                    <label for="task-2" class="checklist__item-text"><span class="checklist__item-label">subtask 2</span></label>
+                                </li>
+                                <li class="checklist__item">
+                                    <input type="checkbox" id="task-3" class="checklist__input" hidden>
+                                    <label for="task-3" class="checklist__item-text"><span class="checklist__item-label">subtask 3</span></label>
+                                </li>
+                                <li class="checklist__item">
+                                    <input type="checkbox" id="task-4" class="checklist__input" hidden>
+                                    <label for="task-4" class="checklist__item-text"><span class="checklist__item-label">subtask 4</span></label>
+                                </li>
+                            </ul>
+                            <div class="task__footer">
+                                <button type="button" class="btn btn--primary">focus</button>
+                                <button type="button" class="btn">finish</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column__head">
+                        <div class="column__title">
+                            in progress
+                            <span class="column__count">(2)</span>
+                        </div>
+                        <div class="column__tools">
+                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
+                            <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 4</p>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 5</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column__head">
+                        <div class="column__title">
+                            completed
+                            <span class="column__count">(2)</span>
+                        </div>
+                        <div class="column__tools">
+                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 6</p>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 7</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column__head">
+                        <div class="column__title">
+                            cancelled
+                            <span class="column__count">(0)</span>
+                        </div>
+                        <div class="column__tools">
+                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 8</p>
+                        </div>
+                    </div>
+                    <div class="task" aria-expanded="false">
+                        <div class="task__head">
+                            <p>task 9</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

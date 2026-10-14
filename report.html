@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>>_ madpomo</title>
+    <link rel="stylesheet" href="madpomo.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <p class="header__brand">>_ madpomo</p>
+            <nav class="header__nav">
+            <p class="date">monday . 13/10/2026 . 12h24</p>
+            <span class="header__sep" aria-hidden="true">|</span>
+            <a href="settings.html" class="header__link">settings</a>
+            <span class="header__sep" aria-hidden="true">|</span>
+            <a href="about.html" class="header__link">about</a>
+        </nav>
+        </header>
+        <aside class="sidebar">
+            <div class="sidebar__section timer">
+                <div class="timer__info">
+                    <h2 class="sidebar__title">//focus | #3 of 4</h2>
+                    <p class="sidebar__subtitle">current task: design onboarding</p>
+                    <p class="timer__clock">00:00</p>
+                </div>
+                <ul class="timer__actions">
+                    <li><button type="button" class="btn btn--primary">start</button></li>
+                    <li><button type="button" class="btn">reset</button></li>
+                    <li><button type="button" class="btn">break</button></li>
+                </ul>
+            </div>
+            <div class="sidebar__section">
+                <h2 class="sidebar__title">//task overview</h2>
+                <div class="stat">
+                    <p class="stat__name">today</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">this week</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">this month</p>
+                    <p class="stat__value">0</p>
+                </div>
+                <div class="stat">
+                    <p class="stat__name">cancelled tasks</p>
+                    <p class="stat__value">0</p>
+                </div>
+            </div>
+            <div class="sidebar__section history">
+
+                <h2 class="sidebar__title">//last 7D</h2>
+                <div class="history__row">
+                    <p class="history__day">MON</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">5</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">TUE</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">4</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">WED</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">1</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">THU</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">8</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">FRI</p>
+                    <div class="history__cells">
+                    </div>
+                    <p class="history__count">0</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">SAT</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">1</p>
+                </div>
+                <div class="history__row">
+                    <p class="history__day">SUN</p>
+                    <div class="history__cells">
+                        <div class="history__cell"></div>
+                        <div class="history__cell"></div>
+                    </div>
+                    <p class="history__count">2</p>
+                </div>
+            </div>
+            <a href="index.html" class="btn btn--primary">&lt;- back to board</a>
+        </aside>
+        <main class="main">
+            <section class="toolbar">
+                <h1 class="toolbar__title">Pomodoro Report</h1>
+                <div class="segmented">
+                    <button type="button" class="segmented__item segmented__item--active">7D</button>
+                    <button type="button" class="segmented__item">30D</button>
+                    <button type="button" class="segmented__item">ALL</button>
+                </div>
+            </section>
+            <div class="content">
+                <section class="kpis">
+                    <div class="kpi">
+                        <p class="kpi__label">avg pomodoros / task</p>
+                        <p class="kpi__value">3.8</p>
+                        <p class="kpi__note">+0.4 vs last week</p>
+                    </div>
+                    <div class="kpi">
+                        <p class="kpi__label">follow-through</p>
+                        <p class="kpi__value kpi__value--accent">87%</p>
+                        <p class="kpi__note">26 of 30 pomodoros finished</p>
+                    </div>
+                    <div class="kpi">
+                        <p class="kpi__label">pauses / pomodoro</p>
+                        <p class="kpi__value">0.4</p>
+                        <p class="kpi__note">13 pauses in total</p>
+                    </div>
+                    <div class="kpi">
+                        <p class="kpi__label">focus time</p>
+                        <p class="kpi__value">10h 50m</p>
+                        <p class="kpi__note">26 completed pomodoros</p>
+                    </div>
+                </section>
+
+                    <section class="report-grid">
+                        <div class="report-grid__left">
+                            <div class="card">
+                                <h2 class="card__title">//Tasks x Pomodoros</h2>
+                                <div class="task-table">
+                                    <div class="task-table__head">
+                                        <p class="task-table__col task-table__col--name">task</p>
+                                        <p class="task-table__col task-table__col--dots">pomodoros</p>
+                                        <p class="task-table__col task-table__col--num">done</p>
+                                        <p class="task-table__col task-table__col--num">pauses</p>
+                                        <p class="task-table__col task-table__col--bar">follow-through</p>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">landing page copy</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--paused"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--available"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">4/5</p>
+                                        <p class="task-table__num">3</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--80"></div>
+                                            </div>
+                                            <p class="bar__label">80%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">refactor auth flow</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">4/4</p>
+                                        <p class="task-table__num">0</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--accent bar__value--100"></div>
+                                            </div>
+                                            <p class="bar__label">100%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">weekly review</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--paused"></span>
+                                            <span class="dot dot--available"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">2/3</p>
+                                        <p class="task-table__num">2</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--67"></div>
+                                            </div>
+                                            <p class="bar__label">67%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">design onboarding</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--paused"></span>
+                                            <span class="dot dot--paused"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">6/6</p>
+                                        <p class="task-table__num">4</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--accent bar__value--100"></div>
+                                            </div>
+                                            <p class="bar__label">100%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">email backlog</p>
+                                        <div class="dots">
+                                            <span class="dot dot--available"></span>
+                                            <span class="dot dot--available"></span>
+                                            <span class="dot dot--complete"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">1/3</p>
+                                        <p class="task-table__num">1</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--33"></div>
+                                            </div>
+                                            <p class="bar__label">33%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">read: deep work ch.3</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">2/2</p>
+                                        <p class="task-table__num">0</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--accent bar__value--100"></div>
+                                            </div>
+                                            <p class="bar__label">100%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row">
+                                        <p class="task-table__name">fix timer drift bug</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--paused"></span>
+                                            <span class="dot dot--complete"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">3/3</p>
+                                        <p class="task-table__num">1</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--accent bar__value--100"></div>
+                                            </div>
+                                            <p class="bar__label">100%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="task-table__row task-table__row--last">
+                                        <p class="task-table__name">plan sprint</p>
+                                        <div class="dots">
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--complete"></span>
+                                            <span class="dot dot--paused"></span>
+                                        </div>
+                                        <p class="task-table__num task-table__num--bold">4/4</p>
+                                        <p class="task-table__num">2</p>
+                                        <div class="bar">
+                                            <div class="bar__track">
+                                                <div class="bar__value bar__value--accent bar__value--100"></div>
+                                            </div>
+                                            <p class="bar__label">100%</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="dots-legend">
+                                        <div class="dots-legend__item">
+                                            <span class="dot dot--complete"></span><p>completed</p>
+                                        </div>
+
+                                        <div class="dots-legend__item">
+                                            <span class="dot dot--paused"></span><p>completed after a pause</p>
+                                        </div>
+
+                                        <div class="dots-legend__item">
+                                            <span class="dot dot--available"></span><p>not followed through</p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="insight">
+                                <div class="insight__text">
+                                    <p class="insight__label">//Insight</p>
+                                    <p class="insight__body">You finish 87% of the pomodoros you start, up from 64% four weeks ago. Most pauses happen in tasks with 4 or more pomodoros. Try splitting "Design onboarding" into two tasks.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="report-grid__right">
+                            <div class="card">
+                                <h2 class="card__title">//Pauses per Pomodoro</h2>
+
+                                <div class="pause-row">
+                                    <div class="pause-row__labels">
+                                        <p>no pause</p>
+                                        <p class="pause-row__count">19</p>
+                                    </div>
+                                    <div class="pause-bar">
+                                        <div class="pause-bar__value pause-bar__value--accent pause-bar__value--63"></div>
+                                        <div class="pause-bar__track"></div>
+                                    </div>
+                                </div>
+
+                                <div class="pause-row">
+                                    <div class="pause-row__labels">
+                                        <p>1 pause</p>
+                                        <p class="pause-row__count">9</p>
+                                    </div>
+                                    <div class="pause-bar">
+                                        <div class="pause-bar__value pause-bar__value--30"></div>
+                                        <div class="pause-bar__track"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="pause-row">
+                                    <div class="pause-row__labels">
+                                        <p>2+ pauses</p>
+                                        <p class="pause-row__count">2</p>
+                                    </div>
+                                    <div class="pause-bar">
+                                        <div class="pause-bar__value pause-bar__value--7"></div>
+                                        <div class="pause-bar__track"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="card">
+                                <h2 class="card__title">//follow-through, last 4 weeks</h2>
+                                <div class="trend">
+
+                                    <div class="trend__col">
+                                        <div class="trend__zone">
+                                            <div class="trend__bar trend__bar--h64"></div>
+                                        </div>
+                                        <p class="trend__value">64%</p>
+                                        <p class="trend__label">w-3</p>
+                                    </div>
+
+                                    <div class="trend__col">
+                                        <div class="trend__zone">
+                                            <div class="trend__bar trend__bar--h72"></div>
+                                        </div>
+                                        <p class="trend__value">72%</p>
+                                        <p class="trend__label">w-2</p>
+                                    </div>
+
+                                    <div class="trend__col">
+                                        <div class="trend__zone">
+                                            <div class="trend__bar trend__bar--h79"></div>
+                                        </div>
+                                        <p class="trend__value">79%</p>
+                                        <p class="trend__label">w-1</p>
+                                    </div>
+
+                                    <div class="trend__col">
+                                        <div class="trend__zone">
+                                            <div class="trend__bar trend__bar--h87 trend__bar--accent"></div>
+                                        </div>
+                                        <p class="trend__value">87%</p>
+                                        <p class="trend__label">this week</p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

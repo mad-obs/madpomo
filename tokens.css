@@ -1,0 +1,71 @@
+:root {
+  /* color / surface */
+  --color-surface-chrome: #0a0a0a;
+  --color-surface-board: #242424;
+  --color-surface-card: #141414;
+  --color-surface-raised: #1e1e1e;
+
+  /* color / text */
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a8a8a8;
+  --color-text-disabled: #6b6b6b;
+  --color-text-on-accent: #0a0a0a;
+
+  /* color / accent (one hue, used sparingly) */
+  --color-accent: #ffa600;
+  --color-accent-hover: #ffb733;
+  --color-accent-active: #e69500;
+  --color-accent-subtle: rgba(255, 166, 0, 0.12);
+
+  /* color / border */
+  --color-border: #3a3a3a;
+  --color-border-strong: #5c5c5c;
+  --color-border-focus: #ffa600;
+
+  /* color / feedback (destructive actions only) */
+  --color-feedback-danger: #ff6b6b;
+
+  /* typography */
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 24px;
+  --font-size-xl: 32px;
+  --font-size-timer: clamp(64px, 6vw, 96px);
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.1;
+  --line-height-base: 1.5;
+  --letter-spacing-caps: 0.04em;
+  --letter-spacing-timer: -0.04em;
+
+  /* spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* sizing */
+  --size-header-height: 40px;
+  --size-toolbar-height: 60px;
+  --size-sidebar-width: clamp(320px, 26vw, 500px);
+  --size-column-width: clamp(280px, 18vw, 340px);
+  --size-control-height: 40px;
+  --size-icon-button: 32px;
+  --size-heat-cell: 16px;
+
+  /* border / radius */
+  --border-width-thin: 1px;
+  --border-width-thick: 4px;
+  --radius-none: 0;
+  --radius-sm: 2px;
+
+  /* motion */
+  --duration-fast: 120ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+}
