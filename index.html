@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>>_ madpomo</title>
-    <link rel="stylesheet" href="madpomo.css">
+    <title>madpomo</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app">
@@ -21,14 +22,14 @@
         <aside class="sidebar">
             <div class="sidebar__section timer">
                 <div class="timer__info">
-                    <h2 class="sidebar__title">//focus | #3 of 4</h2>
-                    <p class="sidebar__subtitle">current task: design onboarding</p>
-                    <p class="timer__clock">00:00</p>
+                    <h2 class="sidebar__title" id="phase-label">//focus | #3 of 4</h2>
+                    <p class="sidebar__subtitle" id="current-task-label">current task: none</p>
+                    <p class="timer__clock" id="clock">00:00</p>
                 </div>
                 <ul class="timer__actions">
-                    <li><button type="button" class="btn btn--primary">start</button></li>
-                    <li><button type="button" class="btn">reset</button></li>
-                    <li><button type="button" class="btn">break</button></li>
+                    <li><button type="button" class="btn btn--primary" id="start-btn">start</button></li>
+                    <li><button type="button" class="btn" id="break-btn">break</button></li>
+                    <li><button type="button" class="btn btn--outline-danger" id="reset-btn">reset</button></li>
                 </ul>
             </div>
             <div class="sidebar__section">
@@ -128,129 +129,53 @@
                 </div>
             </section>
             <section class="board" aria-label="task board">
-                <div class="column">
+                <div class="column" id="column-todo" data-status="todo">
                     <div class="column__head">
                         <div class="column__title">
                             to do
-                            <span class="column__count">(3)</span>
+                            <span class="column__count">(0)</span>
                         </div>
                         <div class="column__tools">
-                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
+                            <button type="button" class="btn btn--icon" aria-label="add task" id="add-todo-btn">+</button>
                             <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
                         </div>
                     </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 1</p>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 2</p>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="true">
-                        <input type="checkbox" id="task-3-toggle" class="task__toggle" hidden>
-                        <div class="task__head">
-                            <label for="task-3-toggle" class="task__head-label">task 3</label>
-                            <div class="task__actions">
-                                <button type="button" class="btn btn--danger" aria-label="delete task">x</button>
-                            </div>
-                        </div>
-                        <div class="task__body">
-                            <p class="task__due">due date: 16/10/2026 | 18h00</p>
-                            <p class="task__notes">lorem ipsum dolor sit amet, consectetur adipiscing elit. nunc non erat quam. duis feugiat neque vitae hendrerit maximus.</p>
-                            <ul class="checklist">
-                                <li class="checklist__item">
-                                    <input type="checkbox" id="task-1" class="checklist__input" hidden>
-                                    <label for="task-1" class="checklist__item-text"><span class="checklist__item-label">subtask 1</span></label>
-                                </li>
-                                <li class="checklist__item">
-                                    <input type="checkbox" id="task-2" class="checklist__input" hidden>
-                                    <label for="task-2" class="checklist__item-text"><span class="checklist__item-label">subtask 2</span></label>
-                                </li>
-                                <li class="checklist__item">
-                                    <input type="checkbox" id="task-3" class="checklist__input" hidden>
-                                    <label for="task-3" class="checklist__item-text"><span class="checklist__item-label">subtask 3</span></label>
-                                </li>
-                                <li class="checklist__item">
-                                    <input type="checkbox" id="task-4" class="checklist__input" hidden>
-                                    <label for="task-4" class="checklist__item-text"><span class="checklist__item-label">subtask 4</span></label>
-                                </li>
-                            </ul>
-                            <div class="task__footer">
-                                <button type="button" class="btn btn--primary">focus</button>
-                                <button type="button" class="btn">finish</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-                <div class="column">
+                <div class="column" id="column-in-progress" data-status="in-progress">
                     <div class="column__head">
                         <div class="column__title">
                             in progress
-                            <span class="column__count">(2)</span>
+                            <span class="column__count">(0)</span>
                         </div>
                         <div class="column__tools">
                             <button type="button" class="btn btn--icon" aria-label="add task">+</button>
                             <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
                         </div>
                     </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 4</p>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 5</p>
-                        </div>
-                    </div>
                 </div>
-                <div class="column">
+                <div class="column" id="column-completed" data-status="completed">
                     <div class="column__head">
                         <div class="column__title">
                             completed
-                            <span class="column__count">(2)</span>
+                            <span class="column__count">(0)</span>
                         </div>
                         <div class="column__tools">
-                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 6</p>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 7</p>
                         </div>
                     </div>
                 </div>
-                <div class="column">
+                <div class="column" id="column-cancelled" data-status="cancelled">
                     <div class="column__head">
                         <div class="column__title">
                             cancelled
                             <span class="column__count">(0)</span>
                         </div>
                         <div class="column__tools">
-                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 8</p>
-                        </div>
-                    </div>
-                    <div class="task" aria-expanded="false">
-                        <div class="task__head">
-                            <p>task 9</p>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
     </div>
+    <script src="app.js"></script>
 </body>
 </html>
