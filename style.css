@@ -231,6 +231,114 @@ button {
   padding: 0 var(--space-2);
 }
 
+/* //noise — four generated noises (noise.js) and one volume bar */
+
+.noise__types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.noise__type {
+  width: 100%;
+  padding: 0 var(--space-2);
+}
+
+/* the noise that is playing is the active item, so it takes the accent */
+.noise__type[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.noise__type[aria-pressed="true"]:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-text-on-accent);
+}
+
+.noise__volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-control-height);
+  margin-top: var(--space-3);
+}
+
+.noise__volume-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+}
+
+.noise__volume-value {
+  width: 2ch;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* A range input is 40px tall here so it meets the minimum control height,
+   while the track it draws inside that box stays a 4px line. */
+.noise__slider {
+  flex: 1;
+  min-width: 0;
+  height: var(--size-control-height);
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* A range input has no styleable "filled" part, so the fill is a hard-stop
+   gradient driven by --noise-fill, which noise.js sets from the value. */
+.noise__slider::-webkit-slider-runnable-track {
+  height: var(--border-width-thick);
+  border: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0 var(--noise-fill, 40%),
+    var(--color-border) var(--noise-fill, 40%) 100%
+  );
+}
+
+.noise__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--space-3);
+  height: var(--space-5);
+  /* half the thumb above the 4px track, half below, so it rides on the line */
+  margin-top: calc((var(--border-width-thick) - var(--space-5)) / 2);
+  border: 0;
+  border-radius: var(--radius-none);
+  background: var(--color-text-primary);
+}
+
+/* Firefox draws the fill itself, so it needs no gradient */
+.noise__slider::-moz-range-track {
+  height: var(--border-width-thick);
+  border: 0;
+  background: var(--color-border);
+}
+
+.noise__slider::-moz-range-progress {
+  height: var(--border-width-thick);
+  background: var(--color-accent);
+}
+
+.noise__slider::-moz-range-thumb {
+  width: var(--space-3);
+  height: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-none);
+  background: var(--color-text-primary);
+}
+
 .stat {
   display: flex;
   align-items: baseline;

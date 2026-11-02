@@ -9,6 +9,7 @@
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const WEEKDAYS_LONG = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 export const WEEKDAYS_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+export const MONTHS_SHORT = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 export const pad2 = (value) => String(value).padStart(2, "0");
 
@@ -37,7 +38,7 @@ export function startOfMonth(date) {
 
 /* "13/10/2026" */
 export function formatDate(date) {
-  return pad2(date.getDate()) + "/" + pad2(date.getMonth() + 1) + "/" + date.getFullYear();
+  return pad2(date.getDate()) + "/" + MONTHS_SHORT[date.getMonth()] + "/" + date.getFullYear();
 }
 
 /* "12:24" or "12:24:07", "4:24 pm" in 12H mode */

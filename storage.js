@@ -60,7 +60,9 @@ MP.defaultSettings = function () {
     sound: true,
     desktopNotifications: false,
     timeFormat: "24H",
-    weekStartsOn: "MON"
+    weekStartsOn: "MON",
+    noiseType: null,
+    noiseVolume: 4
   };
 };
 

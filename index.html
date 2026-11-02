@@ -32,6 +32,22 @@
                     <li><button type="button" class="btn btn--outline-danger" id="reset-btn">reset</button></li>
                 </ul>
             </div>
+            <div class="sidebar__section noise">
+                <h2 class="sidebar__title">//noise</h2>
+                <ul class="noise__types">
+                    <li><button type="button" class="btn noise__type" data-noise="white" aria-pressed="false">white</button></li>
+                    <li><button type="button" class="btn noise__type" data-noise="brown" aria-pressed="false">brown</button></li>
+                    <li><button type="button" class="btn noise__type" data-noise="green" aria-pressed="false">green</button></li>
+                    <li><button type="button" class="btn noise__type" data-noise="pink" aria-pressed="false">pink</button></li>
+                </ul>
+                <div class="noise__volume">
+                    <label class="noise__volume-label" for="noise-volume">volume</label>
+                    <input type="range" class="noise__slider" id="noise-volume" min="0" max="10" step="1" value="4">
+                    <!-- the slider already announces its own value, so the number
+                         beside it is for the eyes only -->
+                    <output class="noise__volume-value" id="noise-volume-value" for="noise-volume" aria-hidden="true">4</output>
+                </div>
+            </div>
             <div class="sidebar__section">
                 <h2 class="sidebar__title">//task overview</h2>
                 <div class="stat">
@@ -129,6 +145,7 @@
     <script src="storage.js"></script>
     <script src="stats.js"></script>
     <script src="timer.js"></script>
+    <script src="noise.js"></script>
     <script src="shell.js"></script>
     <script src="app.js"></script>
     <script src="tutorial.js"></script>

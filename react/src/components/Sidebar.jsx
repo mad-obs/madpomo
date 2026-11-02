@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useMadpomo } from "../store.jsx";
+import Noise from "./Noise.jsx";
 import { formatClock, pomodorosPerDay, taskOverview } from "../lib/stats.js";
 
 const MAX_CELLS = 24;
@@ -52,6 +53,8 @@ export default function Sidebar({ route }) {
           </li>
         </ul>
       </div>
+
+      <Noise />
 
       <div className="sidebar__section">
         <h2 className="sidebar__title">//task overview</h2>

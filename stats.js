@@ -11,6 +11,7 @@ window.MP = window.MP || {};
 MP.DAY_MS = 24 * 60 * 60 * 1000;
 MP.WEEKDAYS_LONG = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 MP.WEEKDAYS_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+MP.MONTHS_SHORT = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 /* --------------------------------------------------------------------------
    Dates
@@ -40,9 +41,10 @@ MP.pad2 = function (value) {
   return String(value).padStart(2, "0");
 };
 
-/* "13/10/2026" */
+/* "13/OCT/2026". A month as a word cannot be read the American way round,
+   which a number can. */
 MP.formatDate = function (date) {
-  return MP.pad2(date.getDate()) + "/" + MP.pad2(date.getMonth() + 1) + "/" + date.getFullYear();
+  return MP.pad2(date.getDate()) + "/" + MP.MONTHS_SHORT[date.getMonth()] + "/" + date.getFullYear();
 };
 
 /* "12:24" in 24H mode, "12:24 pm" in 12H mode.
