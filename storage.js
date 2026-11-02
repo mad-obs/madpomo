@@ -62,7 +62,8 @@ MP.defaultSettings = function () {
     timeFormat: "24H",
     weekStartsOn: "MON",
     noiseType: null,
-    noiseVolume: 4
+    noiseVolume: 4,
+    language: "EN"
   };
 };
 

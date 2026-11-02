@@ -17,6 +17,25 @@
             <a href="settings.html" class="header__link">settings</a>
             <span class="header__sep" aria-hidden="true">|</span>
             <a href="about.html" class="header__link">about</a>
+            <span class="header__sep" aria-hidden="true">|</span>
+            <span class="lang" role="group" aria-label="language" data-no-i18n>
+                <button type="button" class="lang__btn" data-lang="EN" aria-pressed="true" aria-label="english" title="english">
+                    <svg class="lang__flag" viewBox="0 0 60 40" aria-hidden="true" focusable="false">
+                        <rect width="60" height="40" fill="#012169"/>
+                        <path d="M0 0L60 40M60 0L0 40" stroke="#ffffff" stroke-width="8"/>
+                        <path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="4"/>
+                        <path d="M30 0V40M0 20H60" stroke="#ffffff" stroke-width="12"/>
+                        <path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/>
+                    </svg>
+                </button>
+                <button type="button" class="lang__btn" data-lang="PT" aria-pressed="false" aria-label="português do Brasil" title="português do Brasil">
+                    <svg class="lang__flag" viewBox="0 0 70 49" aria-hidden="true" focusable="false">
+                        <rect width="70" height="49" fill="#009b3a"/>
+                        <path d="M35 6L64 24.5L35 43L6 24.5Z" fill="#fedd00"/>
+                        <circle cx="35" cy="24.5" r="12" fill="#002776"/>
+                    </svg>
+                </button>
+            </span>
         </nav>
         </header>
         <aside class="sidebar">
@@ -144,5 +163,7 @@
     <script src="noise.js"></script>
     <script src="shell.js"></script>
     <script src="report.js"></script>
+    <script src="i18n-data.js"></script>
+    <script src="i18n.js"></script>
 </body>
 </html>

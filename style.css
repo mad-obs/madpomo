@@ -162,6 +162,43 @@ button {
   color: var(--color-border-strong);
 }
 
+/* The language switch. The flags are drawn here rather than written as emoji
+   because Chrome on Windows has no flag glyphs at all: it falls back to the
+   two letters of the country code, so a flag emoji is a flag on a Mac and a
+   grey "GB" box on a PC. The chosen one is marked by strength, not colour —
+   the flags bring their own. */
+.lang {
+  display: flex;
+  align-items: center;
+}
+
+.lang__flag {
+  display: block;
+  width: 20px;
+  height: 14px;
+  margin: 0 auto;
+}
+
+.lang__btn {
+  width: var(--size-icon-button);
+  height: var(--size-header-height);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  opacity: 0.4;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+
+.lang__btn:hover {
+  opacity: 0.75;
+}
+
+.lang__btn[aria-pressed="true"] {
+  opacity: 1;
+}
+
 .sidebar {
   grid-area: sidebar;
   display: flex;

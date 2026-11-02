@@ -7,11 +7,12 @@
    else.
    ========================================================================== */
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import Tour from "./components/Tour.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
+import { startI18n } from "./lib/i18n.js";
 
 const BoardView = lazy(() => import("./views/BoardView.jsx"));
 const ReportView = lazy(() => import("./views/ReportView.jsx"));
@@ -28,6 +29,10 @@ const VIEWS = {
 export default function App() {
   const { route, params } = useHashRoute();
   const View = VIEWS[route] || BoardView;
+
+  /* Started once, after the first render has put something on the page. From
+     then on its observer keeps up with React on its own. */
+  useEffect(startI18n, []);
 
   return (
     <div className="app">
