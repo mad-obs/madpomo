@@ -12,7 +12,7 @@
         <header class="header">
             <p class="header__brand">>_ madpomo</p>
             <nav class="header__nav">
-            <p class="date">monday . 13/10/2026 . 12h24</p>
+            <p class="header__date" id="header-date">loading...</p>
             <span class="header__sep" aria-hidden="true">|</span>
             <a href="settings.html" class="header__link">settings</a>
             <span class="header__sep" aria-hidden="true">|</span>
@@ -21,102 +21,39 @@
         </header>
         <aside class="sidebar">
             <div class="sidebar__section timer">
-                <div class="timer__info">
-                    <h2 class="sidebar__title">//focus | #3 of 4</h2>
-                    <p class="sidebar__subtitle">current task: design onboarding</p>
-                    <p class="timer__clock">00:00</p>
+                <div>
+                    <h2 class="sidebar__title" id="phase-label">//focus | #1 of 4</h2>
+                    <p class="sidebar__subtitle" id="current-task-label">current task: none</p>
+                    <p class="timer__clock" id="clock">25:00</p>
                 </div>
                 <ul class="timer__actions">
-                    <li><button type="button" class="btn btn--primary">start</button></li>
-                    <li><button type="button" class="btn">reset</button></li>
-                    <li><button type="button" class="btn">break</button></li>
+                    <li><button type="button" class="btn btn--primary" id="start-btn">start</button></li>
+                    <li><button type="button" class="btn" id="break-btn">break</button></li>
+                    <li><button type="button" class="btn btn--outline-danger" id="reset-btn">reset</button></li>
                 </ul>
             </div>
             <div class="sidebar__section">
                 <h2 class="sidebar__title">//task overview</h2>
                 <div class="stat">
                     <p class="stat__name">today</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-today">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this week</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-week">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this month</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-month">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">cancelled tasks</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-cancelled">0</p>
                 </div>
             </div>
             <div class="sidebar__section history">
-
                 <h2 class="sidebar__title">//last 7D</h2>
-                <div class="history__row">
-                    <p class="history__day">MON</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">5</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">TUE</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">4</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">WED</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">THU</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">8</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">FRI</p>
-                    <div class="history__cells">
-                    </div>
-                    <p class="history__count">0</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SAT</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SUN</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">2</p>
-                </div>
+                <div class="history__list" id="history-rows"></div>
             </div>
             <a href="index.html" class="btn btn--primary">&lt;- back to board</a>
         </aside>
@@ -124,7 +61,7 @@
             <section class="toolbar">
                 <h1 class="toolbar__title">Settings</h1>
             </section>
-            <div class="content">
+            <div class="content" id="settings-page">
                 <div class="settings-grid">
                     <div class="settings-grid__left">
                         <div class="card">
@@ -135,10 +72,10 @@
                                     <p class="setting__label">focus length</p>
                                     <p class="setting__hint">Minutes per pomodoro</p>
                                 </div>
-                                <div class="stepper">
-                                    <button type="button" class="stepper__btn">-</button>
+                                <div class="stepper" data-setting="focusMinutes" data-min="1" data-max="90" data-step="1">
+                                    <button type="button" class="stepper__btn" data-direction="down" aria-label="decrease focus length">-</button>
                                     <p class="stepper__value">25</p>
-                                    <button type="button" class="stepper__btn">+</button>
+                                    <button type="button" class="stepper__btn" data-direction="up" aria-label="increase focus length">+</button>
                                 </div>
                             </div>
 
@@ -147,10 +84,10 @@
                                     <p class="setting__label">short break</p>
                                     <p class="setting__hint">Minutes between pomodoros</p>
                                 </div>
-                                <div class="stepper">
-                                    <button type="button" class="stepper__btn">-</button>
+                                <div class="stepper" data-setting="shortBreakMinutes" data-min="1" data-max="30" data-step="1">
+                                    <button type="button" class="stepper__btn" data-direction="down" aria-label="decrease short break">-</button>
                                     <p class="stepper__value">5</p>
-                                    <button type="button" class="stepper__btn">+</button>
+                                    <button type="button" class="stepper__btn" data-direction="up" aria-label="increase short break">+</button>
                                 </div>
                             </div>
 
@@ -159,10 +96,10 @@
                                     <p class="setting__label">long break</p>
                                     <p class="setting__hint">Minutes after a full cycle</p>
                                 </div>
-                                <div class="stepper">
-                                    <button type="button" class="stepper__btn">-</button>
+                                <div class="stepper" data-setting="longBreakMinutes" data-min="1" data-max="60" data-step="1">
+                                    <button type="button" class="stepper__btn" data-direction="down" aria-label="decrease long break">-</button>
                                     <p class="stepper__value">15</p>
-                                    <button type="button" class="stepper__btn">+</button>
+                                    <button type="button" class="stepper__btn" data-direction="up" aria-label="increase long break">+</button>
                                 </div>
                             </div>
 
@@ -171,10 +108,10 @@
                                     <p class="setting__label">cycle length</p>
                                     <p class="setting__hint">Pomodoros before a long break</p>
                                 </div>
-                                <div class="stepper">
-                                    <button type="button" class="stepper__btn">-</button>
+                                <div class="stepper" data-setting="cycleLength" data-min="2" data-max="8" data-step="1">
+                                    <button type="button" class="stepper__btn" data-direction="down" aria-label="decrease cycle length">-</button>
                                     <p class="stepper__value">4</p>
-                                    <button type="button" class="stepper__btn">+</button>
+                                    <button type="button" class="stepper__btn" data-direction="up" aria-label="increase cycle length">+</button>
                                 </div>
                             </div>
 
@@ -183,7 +120,7 @@
                                     <p class="setting__label">auto-start next session</p>
                                     <p class="setting__hint">Start the break or focus automatically</p>
                                 </div>
-                                <input type="checkbox" id="auto-start-toggle" class="toggle__input" hidden>
+                                <input type="checkbox" id="auto-start-toggle" class="toggle__input" hidden data-setting="autoStart">
                                 <label for="auto-start-toggle" class="toggle"><span class="toggle__knob"></span></label>
                             </div>
 
@@ -197,7 +134,7 @@
                                     <p class="setting__label">sound when a session ends</p>
                                     <p class="setting__hint">A short tone at the end of focus and breaks</p>
                                 </div>
-                                <input type="checkbox" id="sound-toggle" class="toggle__input" hidden checked>
+                                <input type="checkbox" id="sound-toggle" class="toggle__input" hidden data-setting="sound">
                                 <label for="sound-toggle" class="toggle"><span class="toggle__knob"></span></label>
                             </div>
 
@@ -206,11 +143,12 @@
                                     <p class="setting__label">desktop notifications</p>
                                     <p class="setting__hint">Show an alert when the timer finishes</p>
                                 </div>
-                                <input type="checkbox" id="desktop-toggle" class="toggle__input" hidden checked>
+                                <input type="checkbox" id="desktop-toggle" class="toggle__input" hidden data-setting="desktopNotifications">
                                 <label for="desktop-toggle" class="toggle"><span class="toggle__knob"></span></label>
                             </div>
-                        </div>  
-                        
+
+                        </div>
+
                         <div class="card">
                             <h2 class="card__title">//general</h2>
 
@@ -218,9 +156,9 @@
                                 <div class="setting__text">
                                     <p class="setting__label">time format</p>
                                 </div>
-                                <div class="segmented">
-                                    <button type="button" class="segmented__item segmented__item--active">24H</button>
-                                    <button type="button" class="segmented__item">12H</button>
+                                <div class="segmented" data-setting="timeFormat">
+                                    <button type="button" class="segmented__item segmented__item--active" data-value="24H">24H</button>
+                                    <button type="button" class="segmented__item" data-value="12H">12H</button>
                                 </div>
                             </div>
 
@@ -228,16 +166,36 @@
                                 <div class="setting__text">
                                     <p class="setting__label">week starts on</p>
                                 </div>
-                                <div class="segmented">
-                                    <button type="button" class="segmented__item segmented__item--active">MON</button>
-                                    <button type="button" class="segmented__item">SUN</button>
+                                <div class="segmented" data-setting="weekStartsOn">
+                                    <button type="button" class="segmented__item segmented__item--active" data-value="MON">MON</button>
+                                    <button type="button" class="segmented__item" data-value="SUN">SUN</button>
                                 </div>
                             </div>
+
                         </div>
-                        
                     </div>
 
                     <div class="settings-grid__right">
+                        <div class="card">
+                            <h2 class="card__title">//help</h2>
+
+                            <div class="setting">
+                                <div class="setting__text">
+                                    <p class="setting__label">tutorial</p>
+                                    <p class="setting__hint">A guided tour of the board, the timer and the report</p>
+                                </div>
+                                <button type="button" class="btn btn--primary" id="tutorial-btn">open tutorial</button>
+                            </div>
+
+                            <div class="setting">
+                                <div class="setting__text">
+                                    <p class="setting__label">welcome prompt</p>
+                                    <p class="setting__hint">Ask again, next time the board opens</p>
+                                </div>
+                                <button type="button" class="btn" id="welcome-reset-btn">show again</button>
+                            </div>
+                        </div>
+
                         <div class="card">
                             <h2 class="card__title">//data</h2>
 
@@ -246,28 +204,29 @@
                                     <p class="setting__label">export my data</p>
                                     <p class="setting__hint">Download tasks and pomodoros as a file</p>
                                 </div>
-                                <button type="button" class="btn">export</button>
+                                <button type="button" class="btn" id="export-btn">export</button>
                             </div>
+
                         </div>
 
                         <div class="card">
                             <h2 class="card__title">//legal</h2>
 
-                            <a href="#" class="link">
+                            <button type="button" class="link" data-dialog="terms-dialog">
                                 <div class="setting__text">
                                     <p class="setting__label">terms of use</p>
-                                    <p class="setting__hint">madpomo.madobs.com/terms</p>
+                                    <p class="setting__hint">What you agree to by using madpomo</p>
                                 </div>
                                 <span class="link__arrow">-&gt;</span>
-                            </a>
+                            </button>
 
-                            <a href="#" class="link">
+                            <button type="button" class="link" data-dialog="privacy-dialog">
                                 <div class="setting__text">
                                     <p class="setting__label">privacy policy</p>
-                                    <p class="setting__hint">madpomo.madobs.com/privacy</p>
+                                    <p class="setting__hint">What is stored, and where it stays</p>
                                 </div>
                                 <span class="link__arrow">-&gt;</span>
-                            </a>
+                            </button>
                         </div>
 
                         <div class="card card--danger">
@@ -278,7 +237,7 @@
                                     <p class="setting__label">reset everything</p>
                                     <p class="setting__hint">Deletes all tasks, pomodoros and reports. This cannot be undone.</p>
                                 </div>
-                                <button type="button" class="btn btn--outline-danger">reset</button>
+                                <button type="button" class="btn btn--outline-danger" id="reset-all-btn">reset</button>
                             </div>
                         </div>
 
@@ -288,5 +247,65 @@
             </div>
         </main>
     </div>
+
+    <dialog class="dialog dialog--doc" id="terms-dialog" aria-labelledby="terms-dialog-title">
+        <h2 class="dialog__title" id="terms-dialog-title">//terms of use</h2>
+
+        <h3 class="dialog__heading">What This Is</h3>
+        <p class="dialog__text">madpomo is a task board with a pomodoro timer built into it. It is free, it is open source, and it runs in your browser. There is no account, no subscription, and no server behind it.</p>
+
+        <h3 class="dialog__heading">No Warranty</h3>
+        <p class="dialog__text">The app is provided as-is. It has bugs I have not found yet, and it can lose your work: clearing your browser storage erases everything madpomo has saved. I am not liable for lost work or lost time.</p>
+
+        <h3 class="dialog__heading">Backups Are Yours to Make</h3>
+        <p class="dialog__text">Everything you type stays on your device, so nobody else can read it and nobody else can recover it for you. The export button under //data writes all of it to a file. Use it.</p>
+
+        <h3 class="dialog__heading">The Code</h3>
+        <p class="dialog__text">The source is public on GitHub under the Apache License 2.0. Read it, change it, build your own version on it, for free. Keep the licence and the credit with whatever you pass on. The one thing it does not hand over is the name: call your version something other than madpomo.</p>
+
+        <h3 class="dialog__heading">Changes</h3>
+        <p class="dialog__text">These terms change when the app does. The version in this window is the current one.</p>
+
+        <div class="dialog__actions">
+            <button type="button" class="btn btn--primary" data-dialog-close>close</button>
+        </div>
+    </dialog>
+
+    <dialog class="dialog dialog--doc" id="privacy-dialog" aria-labelledby="privacy-dialog-title">
+        <h2 class="dialog__title" id="privacy-dialog-title">//privacy policy</h2>
+
+        <h3 class="dialog__heading">What Is Collected</h3>
+        <p class="dialog__text">Nothing. No account, no analytics, no cookies, no tracking of any kind. There is no server to send anything to.</p>
+
+        <h3 class="dialog__heading">What Is Stored, and Where</h3>
+        <p class="dialog__text">Your tasks, your pomodoro log, the timer state and your settings are saved in this browser's localStorage, on this device. They are not synced anywhere and nobody else can read them.</p>
+
+        <h3 class="dialog__heading">What the Page Requests</h3>
+        <p class="dialog__text">Two things. The app files, from wherever it is hosted. And the Space Mono typeface from Google Fonts, which means Google sees your IP address when the page loads. Nothing else goes out.</p>
+
+        <h3 class="dialog__heading">Deleting It</h3>
+        <p class="dialog__text">Reset everything under //danger zone wipes all of it at once. Clearing your browser data does the same.</p>
+
+        <h3 class="dialog__heading">Checking Any of This</h3>
+        <p class="dialog__text">The code is public. Open the network tab, or read the source.</p>
+
+        <div class="dialog__actions">
+            <button type="button" class="btn btn--primary" data-dialog-close>close</button>
+        </div>
+    </dialog>
+
+    <dialog class="dialog" id="reset-dialog" aria-labelledby="reset-dialog-title">
+        <h2 class="dialog__title" id="reset-dialog-title">//reset everything</h2>
+        <p class="dialog__hint">this deletes every task, pomodoro and setting stored in this browser. it cannot be undone.</p>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="reset-dialog-keep">keep my data</button>
+            <button type="button" class="btn btn--outline-danger" id="reset-dialog-confirm">reset everything</button>
+        </div>
+    </dialog>
+    <script src="storage.js"></script>
+    <script src="stats.js"></script>
+    <script src="timer.js"></script>
+    <script src="shell.js"></script>
+    <script src="settings-ui.js"></script>
 </body>
 </html>

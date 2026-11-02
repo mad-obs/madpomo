@@ -77,9 +77,12 @@ button {
   cursor: pointer;
 }
 
+/* The focus ring is drawn inside the element's own edge (negative offset),
+   so it replaces the border line instead of adding a second one outside it.
+   No control in this app should ever show two stacked outlines. */
 :focus-visible {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
+  outline: var(--border-width-focus, 2px) solid var(--color-border-focus);
+  outline-offset: calc(-1 * var(--border-width-focus, 2px));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -184,18 +187,6 @@ button {
   gap: var(--space-4);
 }
 
-.timer__phase {
-  color: var(--color-accent);
-  font-size: var(--font-size-sm);
-  text-transform: uppercase;
-}
-
-.timer__task {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  text-transform: uppercase;
-}
-
 .timer__clock {
   font-size: var(--font-size-timer);
   font-weight: var(--font-weight-bold);
@@ -208,10 +199,18 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-width: 96px;
+  /* wide enough for the longest label ("resume"), so the column does not
+     resize when start becomes pause or resume */
+  width: 112px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* all three buttons share one width, whatever their label */
+.timer__actions .btn {
+  width: 100%;
+  padding: 0 var(--space-2);
 }
 
 .stat {
@@ -244,6 +243,12 @@ button {
   flex-direction: column;
 }
 
+/* Filled by shell.js — one row per day of the last seven */
+.history__list {
+  display: flex;
+  flex-direction: column;
+}
+
 .history__row {
   display: grid;
   grid-template-columns: 48px 1fr 24px;
@@ -255,6 +260,12 @@ button {
 .history__day {
   color: var(--color-text-secondary);
   text-transform: uppercase;
+}
+
+/* today is the active row, so it gets the accent */
+.history__row--today .history__day {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-bold);
 }
 
 .history__cells {
@@ -279,7 +290,6 @@ button {
   margin-top: auto;
   width: 100%;
   text-decoration: none;
-  align-self: flex-end;
 }
 
 .main {
@@ -383,11 +393,6 @@ button {
   background: var(--color-accent-active);
 }
 
-.btn--sm {
-  min-height: var(--size-icon-button);
-  padding: 0 var(--space-3);
-}
-
 .btn--icon {
   width: var(--size-icon-button);
   min-height: var(--size-icon-button);
@@ -396,19 +401,12 @@ button {
   border-color: var(--color-border);
 }
 
-.btn--danger {
-  width: var(--size-icon-button);
-  min-height: var(--size-icon-button);
-  padding: 0;
-  background: none;
-  border-color: var(--color-feedback-danger);
-  color: var(--color-feedback-danger);
+/* the "_" minimize button on a task card: the glyph sits on the baseline,
+   so the line box is nudged up to read as centred in the square */
+.btn--minimize {
+  align-items: flex-start;
+  padding-top: var(--space-2);
   line-height: 1;
-}
-.btn--danger:hover {
-  background: var(--color-feedback-danger);
-  color: var(--color-text-on-accent);
-  border-color: var(--color-feedback-danger);
 }
 
 /* Report page toolbar (7D/30D/ALL) + Settings General section (24H/12H, MON/SUN) */
@@ -450,6 +448,105 @@ button {
   font-weight: var(--font-weight-regular);
   letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
+}
+
+/* "nothing here yet" line, used wherever live data can legitimately be empty */
+.empty {
+  padding: var(--space-4) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Native <dialog>, used for the two confirmations on the board and the
+   reset on Settings. showModal() puts it in the browser's top layer, so it
+   needs no z-index of its own. */
+.dialog {
+  display: none;
+  width: min(420px, calc(100vw - var(--space-8)));
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width-thin) solid var(--color-border-strong);
+  border-left: var(--border-width-thick) solid var(--color-accent);
+  background: var(--color-surface-card);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+/* A modal is focused by script when it opens, so the focus ring would land
+   on the box itself before anyone has touched the keyboard. The modal is
+   already the only thing you can interact with; the ring says nothing. Its
+   buttons keep theirs. */
+.dialog:focus,
+.dialog:focus-visible {
+  outline: none;
+}
+
+.dialog[open] {
+  display: flex;
+}
+
+.dialog::backdrop {
+  /* with a fallback: ::backdrop does not inherit custom properties in
+     every browser version */
+  background: var(--color-overlay, rgba(10, 10, 10, 0.72));
+}
+
+.dialog__title {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.dialog__task {
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.dialog__label,
+.dialog__hint {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.dialog__input {
+  width: 100%;
+  padding: var(--space-2);
+  border: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-surface-chrome);
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+}
+
+
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.dialog__text {
+  font-size: var(--font-size-sm);
+}
+
+/* A dialog used as a document: terms, privacy. Taller, scrolls, tighter
+   rhythm so headings sit with their paragraph. */
+.dialog--doc {
+  width: min(560px, calc(100vw - var(--space-8)));
+  max-height: 80vh;
+  gap: var(--space-3);
+  overflow-y: auto;
+}
+
+.dialog__heading {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 /* Label + control row — used on Settings and About */
@@ -497,6 +594,21 @@ button {
 
 .link:last-child {
   border-bottom: none;
+}
+
+/* The same row as a button, for the legal texts that open as dialogs
+   rather than navigating anywhere. */
+button.link {
+  width: 100%;
+  border: 0;
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link:hover .link__arrow {
+  color: var(--color-accent-hover);
 }
 
 .link__arrow {
@@ -557,6 +669,24 @@ button {
   border-left: var(--border-width-thin) dashed var(--color-border);
 }
 
+/* The column being named. It is a real column in the row, so the board does
+   not shift sideways when the name is committed. */
+.column--draft .column__head {
+  border-bottom: var(--border-width-thin) solid var(--color-accent);
+}
+
+.column__name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: uppercase;
+}
+
 .column__head {
   display: flex;
   align-items: center;
@@ -596,6 +726,11 @@ button {
 }
 
 .task:has(.task__toggle:checked) {
+  border-left-color: var(--color-accent);
+}
+
+/* the task the timer is counting for — the one active item on the board */
+.task--current {
   border-left-color: var(--color-accent);
 }
 
@@ -648,9 +783,36 @@ button {
   color: var(--color-accent);
   font-size: var(--font-size-xs);
   text-transform: uppercase;
+  cursor: pointer;
+}
+
+.task__due-input {
+  width: 100%;
+  min-height: var(--size-control-height);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-surface-chrome);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+}
+
+/* why a cancelled task was cancelled */
+.task__reason {
+  padding: var(--space-2);
+  border-left: var(--border-width-thin) solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.task__cycles {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
 }
 
 .task__notes {
+  white-space: pre-wrap;
   max-height: 240px;
   padding: var(--space-2);
   border: var(--border-width-thin) solid var(--color-border);
@@ -693,6 +855,13 @@ button {
   gap: var(--space-2);
 }
 
+/* both the [x] box and the text are click targets: the box toggles, the
+   text opens an edit field */
+.checklist__item-box,
+.checklist__item-label {
+  cursor: pointer;
+}
+
 .subtask__delete {
   color: var(--color-feedback-danger);
   font-size: var(--font-size-xs);
@@ -714,36 +883,106 @@ button {
 }
 
 
-.checklist__item--done {
-  color: var(--color-text-secondary);
-}
-
-.checklist__item--done .checklist__item-text {
-  text-decoration: line-through;
-}
-
-.checklist__item-text::before {
-  content: "[ ] ";
-}
-
-.checklist__input:checked ~ .checklist__item-text::before {
-  content: "[x] ";
-  color: var(--color-accent);
-}
-
-.checklist__input:checked ~ .checklist__item-text .checklist__item-label {
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
-}
-
-.checklist__item--done::before {
-  content: "[x] ";
-  color: var(--color-accent);
-}
-
 .task__footer {
   display: flex;
+  gap: var(--space-2);
+}
+
+/* three buttons have to fit a narrow column, so they share the row evenly
+   instead of each padding itself out to its label */
+.task__footer .btn {
+  flex: 1;
+  padding: 0 var(--space-2);
+}
+
+/* The guided tour. A panel rather than a dialog, so the element each step
+   talks about stays visible and usable behind it. */
+.tour {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 380px;
+  max-width: calc(100vw - var(--space-8));
+  padding: var(--space-5);
+  background: var(--color-surface-card);
+  border: var(--border-width-thin) solid var(--color-border-strong);
+  border-left: var(--border-width-thick) solid var(--color-accent);
+}
+
+.tour[hidden] {
+  display: none;
+}
+
+.tour__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
+}
+
+.tour__step {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+}
+
+.tour__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.tour__body {
+  font-size: var(--font-size-sm);
+}
+
+.tour__progress {
+  height: var(--border-width-thick);
+  background: var(--color-surface-raised);
+}
+
+.tour__progress-value {
+  width: 0;
+  height: 100%;
+  background: var(--color-accent);
+  transition: width var(--duration-fast) var(--easing-standard);
+}
+
+.tour__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.tour__actions .btn {
+  flex: 1;
+}
+
+/* Put on whatever element the current step is about. */
+.tour-highlight {
+  outline: var(--border-width-focus, 2px) solid var(--color-accent);
+  outline-offset: calc(-1 * var(--border-width-focus, 2px));
+}
+
+/* Dims the whole page while the tour runs. tutorial.js cuts a hole in it over
+   the highlighted element with clip-path, so that one element stays at full
+   brightness and everything else recedes. Click-through, so the board below
+   still works. */
+.tour-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  background: var(--color-overlay);
+  pointer-events: none;
+  transition: clip-path var(--duration-fast) var(--easing-standard);
+}
+
+.tour-mask[hidden] {
+  display: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -810,6 +1049,13 @@ button {
 }
 
 .task-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Filled by report.js — one row per task with sessions in the range */
+.task-table__rows {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -882,6 +1128,13 @@ button {
   background: var(--color-accent);
 }
 
+/* "+4" when a task has more sessions than fit in the row */
+.dots__more {
+  align-self: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
 .dot--paused {
   background: var(--color-accent-subtle);
   border: 2px solid var(--color-accent);
@@ -912,22 +1165,6 @@ button {
 
 .bar__value--accent {
   background: var(--color-accent);
-}
-
-.bar__value--33 {
-  width: 33%;
-}
-
-.bar__value--67 {
-  width: 67%;
-}
-
-.bar__value--80 {
-  width: 80%;
-}
-
-.bar__value--100 {
-  width: 100%;
 }
 
 .bar__label {
@@ -978,6 +1215,13 @@ button {
   line-height: 1.5;
 }
 
+/* Filled by report.js */
+.pause-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .pause-row {
   display: flex;
   flex-direction: column;
@@ -1014,18 +1258,6 @@ button {
   background: var(--color-surface-raised);
 }
 
-.pause-bar__value--7 {
-  width: 7%;
-}
-
-.pause-bar__value--30 {
-  width: 30%;
-}
-
-.pause-bar__value--63 {
-  width: 63%;
-}
-
 .trend {
   display: flex;
   justify-content: space-between;
@@ -1056,22 +1288,6 @@ button {
 
 .trend__bar--accent {
   background: var(--color-accent);
-}
-
-.trend__bar--h64 {
-  height: 64%;
-}
-
-.trend__bar--h72 {
-  height: 72%;
-}
-
-.trend__bar--h79 {
-  height: 79%;
-}
-
-.trend__bar--h87 {
-  height: 87%;
 }
 
 .trend__value {
@@ -1181,8 +1397,12 @@ button {
   color: var(--color-feedback-danger);
 }
 
+/* .btn:hover turns the border accent, which on a red button reads as a
+   stray yellow outline. The danger button keeps its own hue on every
+   state, so the border is restated here. */
 .btn--outline-danger:hover {
   background: var(--color-feedback-danger);
+  border-color: var(--color-feedback-danger);
   color: var(--color-text-on-accent);
 }
 
@@ -1291,5 +1511,11 @@ button {
   }
   .header__date {
     display: none;
+  }
+  .tour {
+    right: var(--space-4);
+    bottom: var(--space-4);
+    left: var(--space-4);
+    width: auto;
   }
 }

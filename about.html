@@ -12,7 +12,7 @@
         <header class="header">
             <p class="header__brand">>_ madpomo</p>
             <nav class="header__nav">
-            <p class="date">monday . 13/10/2026 . 12h24</p>
+            <p class="header__date" id="header-date">loading...</p>
             <span class="header__sep" aria-hidden="true">|</span>
             <a href="settings.html" class="header__link">settings</a>
             <span class="header__sep" aria-hidden="true">|</span>
@@ -21,102 +21,39 @@
         </header>
         <aside class="sidebar">
             <div class="sidebar__section timer">
-                <div class="timer__info">
-                    <h2 class="sidebar__title">//focus | #3 of 4</h2>
-                    <p class="sidebar__subtitle">current task: design onboarding</p>
-                    <p class="timer__clock">00:00</p>
+                <div>
+                    <h2 class="sidebar__title" id="phase-label">//focus | #1 of 4</h2>
+                    <p class="sidebar__subtitle" id="current-task-label">current task: none</p>
+                    <p class="timer__clock" id="clock">25:00</p>
                 </div>
                 <ul class="timer__actions">
-                    <li><button type="button" class="btn btn--primary">start</button></li>
-                    <li><button type="button" class="btn">reset</button></li>
-                    <li><button type="button" class="btn">break</button></li>
+                    <li><button type="button" class="btn btn--primary" id="start-btn">start</button></li>
+                    <li><button type="button" class="btn" id="break-btn">break</button></li>
+                    <li><button type="button" class="btn btn--outline-danger" id="reset-btn">reset</button></li>
                 </ul>
             </div>
             <div class="sidebar__section">
                 <h2 class="sidebar__title">//task overview</h2>
                 <div class="stat">
                     <p class="stat__name">today</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-today">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this week</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-week">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this month</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-month">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">cancelled tasks</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-cancelled">0</p>
                 </div>
             </div>
             <div class="sidebar__section history">
-
                 <h2 class="sidebar__title">//last 7D</h2>
-                <div class="history__row">
-                    <p class="history__day">MON</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">5</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">TUE</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">4</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">WED</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">THU</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">8</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">FRI</p>
-                    <div class="history__cells">
-                    </div>
-                    <p class="history__count">0</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SAT</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SUN</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">2</p>
-                </div>
+                <div class="history__list" id="history-rows"></div>
             </div>
             <a href="index.html" class="btn btn--primary">&lt;- back to board</a>
         </aside>
@@ -174,7 +111,7 @@
                         <div class="card">
                             <h2 class="card__title">//find me online</h2>
 
-                            <a href="#" class="link">
+                            <a href="https://www.linkedin.com/in/marcosferrs" class="link" target="_blank" rel="noopener">
                                 <div class="setting__text">
                                     <p class="setting__label">linkedin</p>
                                     <p class="setting__hint">linkedin.com/in/marcosferrs</p>
@@ -182,7 +119,7 @@
                                 <span class="link__arrow">-&gt;</span>
                             </a>
 
-                            <a href="#" class="link">
+                            <a href="https://www.instagram.com/madobs.js" class="link" target="_blank" rel="noopener">
                                 <div class="setting__text">
                                     <p class="setting__label">instagram</p>
                                     <p class="setting__hint">@madobs.js</p>
@@ -190,7 +127,7 @@
                                 <span class="link__arrow">-&gt;</span>
                             </a>
 
-                            <a href="#" class="link">
+                            <a href="https://github.com/mad-obs" class="link" target="_blank" rel="noopener">
                                 <div class="setting__text">
                                     <p class="setting__label">github</p>
                                     <p class="setting__hint">github.com/mad-obs</p>
@@ -198,7 +135,7 @@
                                 <span class="link__arrow">-&gt;</span>
                             </a>
 
-                            <a href="#" class="link">
+                            <a href="https://madobs.com" class="link" target="_blank" rel="noopener">
                                 <div class="setting__text">
                                     <p class="setting__label">website</p>
                                     <p class="setting__hint">madobs.com</p>
@@ -217,9 +154,16 @@
                                 <p class="setting__value">v1.0.0</p>
                             </div>
 
-                            <a href="#" class="link">
+                            <a href="settings.html?legal=terms" class="link">
                                 <div class="setting__text">
                                     <p class="setting__label">terms of use</p>
+                                </div>
+                                <span class="link__arrow">-&gt;</span>
+                            </a>
+
+                            <a href="settings.html?legal=privacy" class="link">
+                                <div class="setting__text">
+                                    <p class="setting__label">privacy policy</p>
                                 </div>
                                 <span class="link__arrow">-&gt;</span>
                             </a>
@@ -229,5 +173,9 @@
             </div>
         </main>
     </div>
+    <script src="storage.js"></script>
+    <script src="stats.js"></script>
+    <script src="timer.js"></script>
+    <script src="shell.js"></script>
 </body>
 </html>

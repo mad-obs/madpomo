@@ -1,0 +1,22 @@
+madpomo
+Copyright 2026 Marcos Ferrs
+
+This product includes software developed by Marcos Ferrs (https://madobs.com).
+
+Licensed under the Apache License, Version 2.0. You may not use this work
+except in compliance with that licence. A copy is in the LICENSE file beside
+this one, and at http://www.apache.org/licenses/LICENSE-2.0
+
+What that means in practice: use it, read it, change it, build your own
+version on top of it, for free, including commercially. Keep this notice and
+the LICENSE file with whatever you redistribute, and say where it came from.
+
+The name is not part of the grant. Section 6 of the licence covers trade
+names, so "madpomo" stays with this project. Fork it and ship it under a name
+of your own.
+
+The design side of the project -- the tokens, the stylesheet, the Figma file
+and the written copy -- is additionally available under Creative Commons
+Attribution 4.0 International (CC BY 4.0), the same deal in Creative Commons
+terms: use it anywhere, credit the original.
+https://creativecommons.org/licenses/by/4.0/

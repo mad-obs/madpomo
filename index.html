@@ -12,7 +12,7 @@
         <header class="header">
             <p class="header__brand">>_ madpomo</p>
             <nav class="header__nav">
-            <p class="header__date">monday . 13/10/2026 . 12h24</p>
+            <p class="header__date" id="header-date">loading...</p>
             <span class="header__sep" aria-hidden="true">|</span>
             <a href="settings.html" class="header__link">settings</a>
             <span class="header__sep" aria-hidden="true">|</span>
@@ -21,10 +21,10 @@
         </header>
         <aside class="sidebar">
             <div class="sidebar__section timer">
-                <div class="timer__info">
-                    <h2 class="sidebar__title" id="phase-label">//focus | #3 of 4</h2>
+                <div>
+                    <h2 class="sidebar__title" id="phase-label">//focus | #1 of 4</h2>
                     <p class="sidebar__subtitle" id="current-task-label">current task: none</p>
-                    <p class="timer__clock" id="clock">00:00</p>
+                    <p class="timer__clock" id="clock">25:00</p>
                 </div>
                 <ul class="timer__actions">
                     <li><button type="button" class="btn btn--primary" id="start-btn">start</button></li>
@@ -36,146 +36,101 @@
                 <h2 class="sidebar__title">//task overview</h2>
                 <div class="stat">
                     <p class="stat__name">today</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-today">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this week</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-week">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">this month</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-month">0</p>
                 </div>
                 <div class="stat">
                     <p class="stat__name">cancelled tasks</p>
-                    <p class="stat__value">0</p>
+                    <p class="stat__value" id="stat-cancelled">0</p>
                 </div>
             </div>
             <div class="sidebar__section history">
-                
                 <h2 class="sidebar__title">//last 7D</h2>
-                <div class="history__row">
-                    <p class="history__day">MON</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">5</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">TUE</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">4</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">WED</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">THU</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">8</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">FRI</p>
-                    <div class="history__cells">
-                    </div>
-                    <p class="history__count">0</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SAT</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">1</p>
-                </div>
-                <div class="history__row">
-                    <p class="history__day">SUN</p>
-                    <div class="history__cells">
-                        <div class="history__cell"></div>
-                        <div class="history__cell"></div>
-                    </div>
-                    <p class="history__count">2</p>
-                </div>
-                 <a href="report.html" class="btn history__report">pomodoro report</a>
+                <div class="history__list" id="history-rows"></div>
+                <a href="report.html" class="btn history__report">pomodoro report</a>
             </div>
         </aside>
         <main class="main">
             <section class="toolbar">
                 <h1 class="toolbar__title">MY BOARD</h1>
                 <div class="toolbar__actions">
-                    <div class="search"><input type="search" class="search__input" placeholder="/ search tasks" aria-label="search tasks"></div>
-                <button type="button" class="btn btn--primary">+column</button>
+                    <div class="search"><input type="search" id="search-input" class="search__input" placeholder="/ search tasks" aria-label="search tasks"></div>
+                <button type="button" class="btn btn--primary" id="add-column-btn">+column</button>
                 </div>
             </section>
-            <section class="board" aria-label="task board">
-                <div class="column" id="column-todo" data-status="todo">
-                    <div class="column__head">
-                        <div class="column__title">
-                            to do
-                            <span class="column__count">(0)</span>
-                        </div>
-                        <div class="column__tools">
-                            <button type="button" class="btn btn--icon" aria-label="add task" id="add-todo-btn">+</button>
-                            <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="column" id="column-in-progress" data-status="in-progress">
-                    <div class="column__head">
-                        <div class="column__title">
-                            in progress
-                            <span class="column__count">(0)</span>
-                        </div>
-                        <div class="column__tools">
-                            <button type="button" class="btn btn--icon" aria-label="add task">+</button>
-                            <button type="button" class="btn btn--icon" aria-label="delete column">x</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="column" id="column-completed" data-status="completed">
-                    <div class="column__head">
-                        <div class="column__title">
-                            completed
-                            <span class="column__count">(0)</span>
-                        </div>
-                        <div class="column__tools">
-                        </div>
-                    </div>
-                </div>
-                <div class="column" id="column-cancelled" data-status="cancelled">
-                    <div class="column__head">
-                        <div class="column__title">
-                            cancelled
-                            <span class="column__count">(0)</span>
-                        </div>
-                        <div class="column__tools">
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <section class="board" id="board" aria-label="task board"></section>
         </main>
     </div>
+
+    <dialog class="dialog" id="cancel-dialog" aria-labelledby="cancel-dialog-title">
+        <h2 class="dialog__title" id="cancel-dialog-title">//cancel task</h2>
+        <p class="dialog__task" id="cancel-dialog-task"></p>
+        <label class="dialog__label" for="cancel-reason">why are you cancelling it?</label>
+        <textarea class="dialog__input" id="cancel-reason" rows="3" placeholder="reason (optional)..."></textarea>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="cancel-dialog-keep">keep task</button>
+            <button type="button" class="btn btn--outline-danger" id="cancel-dialog-confirm">cancel task</button>
+        </div>
+    </dialog>
+    <dialog class="dialog" id="delete-dialog" aria-labelledby="delete-dialog-title">
+        <h2 class="dialog__title" id="delete-dialog-title">//delete task</h2>
+        <p class="dialog__task" id="delete-dialog-task"></p>
+        <p class="dialog__hint">this removes the task for good. it cannot be undone.</p>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="delete-dialog-keep">keep it</button>
+            <button type="button" class="btn btn--outline-danger" id="delete-dialog-confirm">delete</button>
+        </div>
+    </dialog>
+    <dialog class="dialog" id="delete-column-dialog" aria-labelledby="delete-column-dialog-title">
+        <h2 class="dialog__title" id="delete-column-dialog-title">//delete column</h2>
+        <p class="dialog__task" id="delete-column-dialog-name"></p>
+        <p class="dialog__hint" id="delete-column-dialog-hint"></p>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="delete-column-keep">keep it</button>
+            <button type="button" class="btn btn--outline-danger" id="delete-column-confirm">delete column</button>
+        </div>
+    </dialog>
+    <dialog class="dialog" id="welcome-dialog" tabindex="-1" aria-labelledby="welcome-dialog-title">
+        <h2 class="dialog__title" id="welcome-dialog-title">//welcome</h2>
+        <p class="dialog__task">first time here?</p>
+        <p class="dialog__text">madpomo is a task board with a pomodoro timer built into it. it counts how many pomodoros you finish, not how many you start. the tour walks through the board, the timer and the report in about two minutes.</p>
+        <p class="dialog__hint">skipping is fine. the tutorial is always in settings, under //help.</p>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="welcome-skip">skip for now</button>
+            <button type="button" class="btn btn--primary" id="welcome-start">show me around</button>
+        </div>
+    </dialog>
+
+    <div class="tour-mask" id="tour-mask" hidden aria-hidden="true"></div>
+
+    <section class="tour" id="tour" hidden aria-label="tutorial">
+        <div class="tour__head">
+            <p class="tour__step" id="tour-step">step 1 of 17</p>
+            <button type="button" class="btn btn--icon" id="tour-close" aria-label="close the tutorial">x</button>
+        </div>
+        <h2 class="tour__title" id="tour-title"></h2>
+        <p class="tour__body" id="tour-body"></p>
+        <div class="tour__progress">
+            <div class="tour__progress-value" id="tour-progress"></div>
+        </div>
+        <div class="tour__actions">
+            <button type="button" class="btn" id="tour-back">back</button>
+            <button type="button" class="btn btn--primary" id="tour-next">next</button>
+        </div>
+    </section>
+
+    <script src="storage.js"></script>
+    <script src="stats.js"></script>
+    <script src="timer.js"></script>
+    <script src="shell.js"></script>
     <script src="app.js"></script>
+    <script src="tutorial.js"></script>
 </body>
 </html>

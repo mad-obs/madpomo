@@ -1,293 +1,299 @@
-//variables
+/* ==========================================================================
+   madpomo — the board (index.html only)
 
-const clock = document.getElementById("clock");
-const startBtn = document.getElementById("start-btn");
-const resetBtn = document.getElementById("reset-btn");
-const breakBtn = document.getElementById("break-btn");
-const phaseLabel = document.getElementById("phase-label");
-const todoColumn = document.getElementById("column-todo");
-const inProgressColumn = document.getElementById("column-in-progress");
-const completedColumn = document.getElementById("column-completed");
-const cancelledColumn = document.getElementById("column-cancelled");
-const currentTaskLabel = document.getElementById("current-task-label");
+   Owns the task cards: rendering, editing, status changes, search and
+   drag-and-drop. The task array itself lives in MP.tasks (storage.js) because
+   the timer needs to read titles out of it too.
+   ========================================================================== */
 
-let timerId = null;
-let currentTaskId = null;
-let isRunning = false;
-let draggedTaskId = null;
-let draggedElement = null;
-let justSavedEdit = false;
-let currentPhase = "focus";
-let completedPomodoros = 0;
-let nextTaskId = 2; // task 1 already exists, so the next one starts at 2t
-let offsetX = 0;
-let offsetY = 0;
-let placeholder = document.createElement("div");
-placeholder.className = "drop-placeholder";
+(function () {
+  const tasks = MP.tasks;
 
-const tasks = [
-  {
-    id: 1,
-    title: "task 1",
-    dueDate: "16/10/2026 | 18h00",
-    notes: "add your task description here...",
-    subtasks: [
-      { text: "subtask 1", done: false },
-      { text: "subtask 2", done: false }
-    ],
-    status: "todo",
-    cyclesUsed: 0,
-    expanded: false
+  const board = document.getElementById("board");
+
+  const searchInput = document.getElementById("search-input");
+
+  const cancelDialog = document.getElementById("cancel-dialog");
+  const cancelDialogTask = document.getElementById("cancel-dialog-task");
+  const cancelReasonInput = document.getElementById("cancel-reason");
+  const deleteDialog = document.getElementById("delete-dialog");
+  const deleteDialogTask = document.getElementById("delete-dialog-task");
+  const deleteColumnDialog = document.getElementById("delete-column-dialog");
+  const deleteColumnName = document.getElementById("delete-column-dialog-name");
+  const deleteColumnHint = document.getElementById("delete-column-dialog-hint");
+
+  let justSavedEdit = false;
+  let searchTerm = "";
+  let pendingCancelId = null;
+  let pendingDeleteId = null;
+  let pendingColumnId = null;
+
+  /* Text typed by the user goes back into the page as HTML, so it has to be
+     escaped — otherwise a single "<" in a note breaks the card. */
+  function esc(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
-];
 
+  function findTask(id) {
+    return tasks.find(function (task) {
+      return task.id === id;
+    });
+  }
 
+  function columnFor(status) {
+    return board.querySelector('.column[data-status="' + status + '"]');
+  }
 
-function renderTasks() {
-  document.querySelectorAll(".task").forEach(function (card) {
-    card.remove();
-  });
+  /* --------------------------------------------------------------------------
+     Due dates: stored as an ISO string (what <input type="datetime-local">
+     gives us), shown in the project's own format.
+     -------------------------------------------------------------------------- */
 
-  tasks.forEach(function (task) {
-    const cardHTML = createTaskCardHTML(task);
+  function dueDateText(task) {
+    if (!task.dueDate) return "not set";
+    const parsed = new Date(task.dueDate);
+    if (isNaN(parsed.getTime())) return task.dueDate; // free text from an old save
+    return MP.formatDate(parsed) + " | " + MP.formatTime(parsed);
+  }
 
-    if (task.status === "todo") {
-      todoColumn.insertAdjacentHTML("beforeend", cardHTML);
-    } else if (task.status === "in-progress") {
-      inProgressColumn.insertAdjacentHTML("beforeend", cardHTML);
-    } else if (task.status === "completed") {
-      completedColumn.insertAdjacentHTML("beforeend", cardHTML);
-    } else if (task.status === "cancelled") {
-      cancelledColumn.insertAdjacentHTML("beforeend", cardHTML);
-    }
-  });
-}
+  function dueDateInputValue(task) {
+    const parsed = new Date(task.dueDate);
+    if (!task.dueDate || isNaN(parsed.getTime())) return "";
+    return parsed.getFullYear() + "-" + MP.pad2(parsed.getMonth() + 1) + "-" + MP.pad2(parsed.getDate()) +
+      "T" + MP.pad2(parsed.getHours()) + ":" + MP.pad2(parsed.getMinutes());
+  }
 
-const addTodoBtn = document.getElementById("add-todo-btn");
+  /* --------------------------------------------------------------------------
+     Status changes — one door in, so the timestamps the report needs are
+     always written.
+     -------------------------------------------------------------------------- */
 
-addTodoBtn.addEventListener("click", function () {
-  const inputHTML = `
-    <div class="task">
-      <div class="task__head">
-        <input type="text" id="new-task-input" class="task__head-input" placeholder="task title...">
-      </div>
-    </div>
-  `;
-  const todoColumnHead = todoColumn.querySelector(".column__head");
-  todoColumnHead.insertAdjacentHTML("afterend", inputHTML);
+  function setStatus(task, status, reason) {
+    task.status = status;
 
-  const input = document.getElementById("new-task-input");
-  input.focus();
-
-  input.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-      const title = input.value.trim();
-
-      if (title !== "") {
-        const newTask = {
-          id: nextTaskId,
-          title: title,
-          dueDate: "",
-          notes: "",
-          subtasks: [],
-          status: "todo",
-          cyclesUsed: 0,
-          expanded: false
-        };
-
-        tasks.push(newTask);
-        nextTaskId = nextTaskId + 1;
-      }
-
-      input.remove();
-      renderTasks();
+    if (status === "completed") {
+      task.completedAt = Date.now();
+      task.cancelledAt = null;
+    } else if (status === "cancelled") {
+      task.cancelledAt = Date.now();
+      task.completedAt = null;
+      if (reason !== undefined) task.cancelReason = reason;
+    } else {
+      task.completedAt = null;
+      task.cancelledAt = null;
     }
 
-    if (event.key === "Escape") {
-      input.remove();
+    if ((status === "completed" || status === "cancelled") && MP.timer) {
+      if (status === "completed") MP.timer.taskFinished(task.id);
+      else MP.timer.taskRemoved(task.id);
     }
-  });
-});
+  }
 
-renderTasks();
+  /* --------------------------------------------------------------------------
+     Render
+     -------------------------------------------------------------------------- */
 
-function createTaskCardHTML(task) {
-  const dueDateText = task.dueDate === "" ? "not set" : task.dueDate;
-  const notesText = task.notes === "" ? "add your task description here..." : task.notes;
-  const expandedAttr = task.expanded ? "checked" : "";
-  const focusDisabledAttr = task.id === currentTaskId ? "disabled" : "";
-  const subtasksHTML = task.subtasks.map(function (subtask, index) {
-    const checkedAttr = subtask.done ? "checked" : "";
-    return `
-      <li class="checklist__item">
-        <input type="checkbox" id="task-${task.id}-subtask-${index}" class="checklist__input" hidden ${checkedAttr}>
-        <span class="checklist__item-box" data-task-id="${task.id}" data-subtask-index="${index}" data-action="toggle-subtask">${checkedAttr ? "[x]" : "[ ]"}</span>
-        <span class="checklist__item-label" data-task-id="${task.id}" data-subtask-index="${index}" data-action="edit-subtask">${subtask.text}</span>
-        <span class="subtask__delete" data-task-id="${task.id}" data-subtask-index="${index}">x</span>
-      </li>
-    `;
-  }).join("");
+  function matchesSearch(task) {
+    if (searchTerm === "") return true;
 
-  return `
-    <div class="task" data-id="${task.id}">
-      <input type="checkbox" id="task-${task.id}-toggle" class="task__toggle" hidden data-task-id="${task.id}" ${expandedAttr}>
-      <div class="task__head">
-        <span class="task__head-label" data-task-id="${task.id}" data-action="edit-title">${task.title}</span>
-        <div class="task__actions">
-          <button type="button" class="btn btn--danger" data-task-id="${task.id}" data-action="delete" aria-label="delete task">x</button>
+    const haystack = [task.title, task.notes]
+      .concat(task.subtasks.map(function (subtask) { return subtask.text; }))
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.indexOf(searchTerm) !== -1;
+  }
+
+  function createTaskCardHTML(task) {
+    const notesText = task.notes === "" ? "add your task description here..." : task.notes;
+    const expandedAttr = task.expanded ? "checked" : "";
+    const isCurrent = MP.timer !== null && MP.timer.currentTaskId() === task.id;
+    const focusDisabledAttr = isCurrent ? "disabled" : "";
+    const done = task.status === "completed" || task.status === "cancelled";
+
+    const subtasksHTML = task.subtasks.map(function (subtask, index) {
+      return `
+        <li class="checklist__item">
+          <span class="checklist__item-box" data-task-id="${task.id}" data-subtask-index="${index}" data-action="toggle-subtask">${subtask.done ? "[x]" : "[ ]"}</span>
+          <span class="checklist__item-label" data-task-id="${task.id}" data-subtask-index="${index}" data-action="edit-subtask">${esc(subtask.text)}</span>
+          <span class="subtask__delete" data-task-id="${task.id}" data-subtask-index="${index}">x</span>
+        </li>
+      `;
+    }).join("");
+
+    const reasonHTML = task.status === "cancelled" && task.cancelReason
+      ? `<p class="task__reason">cancelled: ${esc(task.cancelReason)}</p>`
+      : "";
+
+    const cyclesHTML = task.cyclesUsed > 0
+      ? `<p class="task__cycles">${task.cyclesUsed} pomodoro${task.cyclesUsed === 1 ? "" : "s"} done</p>`
+      : "";
+
+    /* The red slot is always the last button: "cancel" everywhere, except in
+       the cancelled column where the only thing left to do is delete. */
+    const redButton = task.status === "cancelled"
+      ? `<button type="button" class="btn btn--outline-danger" data-task-id="${task.id}" data-action="delete">delete</button>`
+      : `<button type="button" class="btn btn--outline-danger" data-task-id="${task.id}" data-action="cancel">cancel</button>`;
+
+    const footerHTML = done
+      ? `
+        <div class="task__footer">
+          <button type="button" class="btn" data-task-id="${task.id}" data-action="reopen">reopen</button>
+          ${redButton}
         </div>
-      </div>
-      <div class="task__body">
-        <p class="task__due">due date: ${dueDateText}</p>
-        <p class="task__notes" data-task-id="${task.id}" data-action="edit-notes">${notesText}</p>
-        <ul class="checklist">
-            ${subtasksHTML}
-            <li class="checklist__item checklist__item--ghost" data-task-id="${task.id}">
-              <span class="checklist__item-label">+ add subtask</span>
-            </li>
-        </ul>
+      `
+      : `
         <div class="task__footer">
           <button type="button" class="btn btn--primary" data-task-id="${task.id}" data-action="focus" ${focusDisabledAttr}>focus</button>
           <button type="button" class="btn" data-task-id="${task.id}" data-action="finish">finish</button>
+          ${redButton}
+        </div>
+      `;
+
+    return `
+      <div class="task${isCurrent ? " task--current" : ""}" data-id="${task.id}">
+        <input type="checkbox" id="task-${task.id}-toggle" class="task__toggle" hidden data-task-id="${task.id}" ${expandedAttr}>
+        <div class="task__head">
+          <span class="task__head-label" data-task-id="${task.id}" data-action="edit-title">${esc(task.title)}</span>
+          <div class="task__actions">
+            <button type="button" class="btn btn--icon btn--minimize" data-task-id="${task.id}" data-action="collapse" aria-label="minimize task">_</button>
+          </div>
+        </div>
+        <div class="task__body">
+          <p class="task__due" data-task-id="${task.id}" data-action="edit-due">due date: ${esc(dueDateText(task))}</p>
+          ${reasonHTML}
+          <p class="task__notes" data-task-id="${task.id}" data-action="edit-notes">${esc(notesText)}</p>
+          <ul class="checklist">
+              ${subtasksHTML}
+              <li class="checklist__item checklist__item--ghost" data-task-id="${task.id}">
+                <span class="checklist__item-label">+ add subtask</span>
+              </li>
+          </ul>
+          ${cyclesHTML}
+          ${footerHTML}
         </div>
       </div>
-    </div>
-  `;
-}
+    `;
+  }
 
-console.log(tasks);
+  /* The id doubles as the add button's id, so the built-in columns keep the
+     ids the tutorial points at (#add-todo-btn, #add-in-progress-btn). */
+  function createColumnHTML(column) {
+    const tools = [];
 
-function tick() {
-  timeLeft = timeLeft - 1;
-  updateClockDisplay();
-
-  if (timeLeft <= 0) {
-  clearInterval(timerId);
-  setRunningState(false);
-  if (currentPhase === "focus") {
-    completedPomodoros = completedPomodoros + 1;
-
-    if (currentTaskId !== null) {
-      const task = tasks.find(function (t) {
-        return t.id === currentTaskId;
-      });
-      task.cyclesUsed = task.cyclesUsed + 1;
+    if (column.kind === "open") {
+      tools.push(
+        '<button type="button" class="btn btn--icon" aria-label="add task" ' +
+        'id="add-' + column.id + '-btn" data-action="add-task">+</button>'
+      );
     }
-  }
-  setTimeout(function () {
-  if (currentPhase === "focus") {
-    switchPhase("break");
-  } else {
-    if (completedPomodoros % 4 !== 0) {
-      switchPhase("focus");
+
+    if (!column.fixed) {
+      tools.push(
+        '<button type="button" class="btn btn--icon" aria-label="delete column" ' +
+        'data-action="delete-column">x</button>'
+      );
     }
-  }
-}, 3000);
-  }
-}
 
-function switchPhase(phase) {
-  currentPhase = phase;
-
-  if (phase === "focus") {
-    timeLeft = 25 * 60; //25*60 default
-    const cycleNumber = (completedPomodoros % 4) + 1;
-    phaseLabel.textContent = "//focus | #" + cycleNumber + " of 4";
-  } else {
-    if (completedPomodoros % 4 === 0) {
-      timeLeft = 15 * 60; //15*60 default
-    } else {
-      timeLeft = 5 * 60; // 5*60 default
-    }
-    phaseLabel.textContent = "//break";
+    return (
+      '<div class="column" id="column-' + column.id + '" data-status="' + esc(column.id) + '">' +
+        '<div class="column__head">' +
+          '<div class="column__title">' + esc(column.name) +
+            ' <span class="column__count">(0)</span>' +
+          '</div>' +
+          '<div class="column__tools">' + tools.join("") + '</div>' +
+        '</div>' +
+      '</div>'
+    );
   }
 
-  updateClockDisplay();
-  clearInterval(timerId);
-  timerId = setInterval(tick, 1000);
-  setRunningState(true);
-}
-
-function setRunningState(running) {
-  isRunning = running;
-  startBtn.textContent = running ? "pause" : "start";
-}
-
-startBtn.addEventListener("click", function () {
-  if (isRunning) {
-    clearInterval(timerId);
-    setRunningState(false);
-  } else {
-    timerId = setInterval(tick, 1000);
-    setRunningState(true);
+  /* Only run when the set of columns changes: it throws away the board, so
+     anything half-typed inside it goes with it. */
+  function renderColumns() {
+    board.innerHTML = MP.columns.map(createColumnHTML).join("");
   }
-});
 
-resetBtn.addEventListener("click", function () {
-  clearInterval(timerId);
-  timeLeft = 25 * 60; //25 * 60 default
-  updateClockDisplay();
-  setRunningState(false);
-});
+  let rendering = false;
 
-breakBtn.addEventListener("click", function () {
-  switchPhase("break");
-});
+  function renderTasks() {
+    rendering = true;
+    MP.saveTasks();
 
-let timeLeft = 25 * 60; // 25 * 60 default
-
-function updateClockDisplay() {
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const minutesText = String(minutes).padStart(2, "0");
-  const secondsText = String(seconds).padStart(2, "0");
-  clock.textContent = minutesText + ":" + secondsText;
-}
-
-updateClockDisplay();
-const cycleNumber = (completedPomodoros % 4) + 1;
-phaseLabel.textContent = "//focus | #" + cycleNumber + " of 4";
-
-document.addEventListener("click", function (event) {
-  if (event.target.classList.contains("subtask__delete")) {
-    const taskId = Number(event.target.dataset.taskId);
-    const subtaskIndex = Number(event.target.dataset.subtaskIndex);
-
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
+    document.querySelectorAll(".task").forEach(function (card) {
+      card.remove();
     });
 
-    task.subtasks.splice(subtaskIndex, 1);
-    renderTasks();
-    } else if (event.target.dataset.action === "toggle-subtask") {
-    const taskId = Number(event.target.dataset.taskId);
-    const subtaskIndex = Number(event.target.dataset.subtaskIndex);
-
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
+    const counts = {};
+    MP.columns.forEach(function (column) {
+      counts[column.id] = 0;
     });
 
-    task.subtasks[subtaskIndex].done = !task.subtasks[subtaskIndex].done;
+    tasks.forEach(function (task) {
+      if (!matchesSearch(task)) return;
+
+      const column = columnFor(task.status);
+      if (!column) return;
+
+      counts[task.status] = (counts[task.status] || 0) + 1;
+      column.insertAdjacentHTML("beforeend", createTaskCardHTML(task));
+    });
+
+    MP.columns.forEach(function (column) {
+      const el = columnFor(column.id);
+      const label = el ? el.querySelector(".column__count") : null;
+      if (label) label.textContent = "(" + counts[column.id] + ")";
+    });
+
+    MP.dataChanged();
+    rendering = false;
+  }
+
+  /* Redraw when something outside the board changes a task — the timer bumps
+     cyclesUsed when a pomodoro lands. The flag stops the loop, since
+     renderTasks itself announces the change for the sidebar. */
+  MP.onDataChanged(function () {
+    if (rendering) return;
     renderTasks();
-  } else if (event.target.closest(".checklist__item--ghost")) {
-    const ghostItem = event.target.closest(".checklist__item--ghost");
-    const taskId = Number(ghostItem.dataset.taskId);
+  });
 
-    const inputHTML = `<input type="text" class="search__input" placeholder="subtask title...">`;
-    ghostItem.insertAdjacentHTML("beforebegin", inputHTML);
+  /* --------------------------------------------------------------------------
+     Adding tasks
+     -------------------------------------------------------------------------- */
 
-    const input = ghostItem.previousElementSibling;
+  function startNewTask(column, status) {
+    const existing = document.getElementById("new-task-input");
+    if (existing) existing.remove();
+
+    const inputHTML = `
+      <div class="task">
+        <div class="task__head">
+          <input type="text" id="new-task-input" class="task__head-input" placeholder="task title...">
+        </div>
+      </div>
+    `;
+
+    const head = column.querySelector(".column__head");
+    head.insertAdjacentHTML("afterend", inputHTML);
+
+    const input = document.getElementById("new-task-input");
     input.focus();
 
     input.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
-        const text = input.value.trim();
+        const title = input.value.trim();
 
-        if (text !== "") {
-          const task = tasks.find(function (t) {
-            return t.id === taskId;
-          });
-          task.subtasks.push({ text: text, done: false });
+        if (title !== "") {
+          tasks.push(MP.normalizeTask({
+            id: MP.nextTaskId,
+            title: title,
+            status: status,
+            createdAt: Date.now()
+          }));
+          MP.nextTaskId = MP.nextTaskId + 1;
         }
 
         input.remove();
@@ -295,156 +301,501 @@ document.addEventListener("click", function (event) {
       }
 
       if (event.key === "Escape") {
-        input.remove();
+        input.closest(".task").remove();
       }
     });
-  } else if (event.target.dataset.action === "finish") {
-    const taskId = Number(event.target.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
-    });
 
-    if (taskId === currentTaskId && currentPhase === "focus") {
-      task.cyclesUsed = task.cyclesUsed + 1;
-      clearInterval(timerId);
-      setRunningState(false);
+    input.addEventListener("blur", function () {
+      const card = input.closest(".task");
+      if (card) card.remove();
+    });
+  }
+
+  /* The column heads are redrawn whenever the columns change, so their
+     buttons are caught on the way up instead of being bound one by one. */
+  board.addEventListener("click", function (event) {
+    const addButton = event.target.closest('[data-action="add-task"]');
+    if (addButton) {
+      const column = addButton.closest(".column");
+      startNewTask(column, column.dataset.status);
+      return;
     }
 
-    task.status = "completed";
-    renderTasks();
-} else if (event.target.dataset.action === "delete") {
-    const taskId = Number(event.target.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
-    });
+    const deleteButton = event.target.closest('[data-action="delete-column"]');
+    if (deleteButton) {
+      openDeleteColumnDialog(deleteButton.closest(".column").dataset.status);
+    }
+  });
 
-    if (task.status === "cancelled") {
-      const taskIndex = tasks.indexOf(task);
-      tasks.splice(taskIndex, 1);
-    } else {
-      task.status = "cancelled";
+  /* --------------------------------------------------------------------------
+     Adding and deleting columns
+
+     A new column is typed in place, the same way a new task is: a draft
+     column with an input where its name goes. It lands after the last open
+     column, so completed and cancelled stay on the right where finish and
+     cancel put things.
+     -------------------------------------------------------------------------- */
+
+  function openColumnCount() {
+    return MP.columns.filter(function (column) {
+      return column.kind === "open";
+    }).length;
+  }
+
+  function startNewColumn() {
+    const existing = document.getElementById("new-column-input");
+    if (existing) {
+      existing.focus();
+      return;
     }
 
-    renderTasks();
-} else if (event.target.dataset.action === "focus") {
-    const taskId = Number(event.target.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
-    });
-    task.status = "in-progress";
-    currentTaskId = taskId;
-    currentTaskLabel.textContent = "current task: " + task.title;
-    renderTasks();
-    switchPhase("focus");
-  } else if (event.target.dataset.action === "edit-title") {
-    const span = event.target;
-    const taskId = Number(span.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
+    const draft = document.createElement("div");
+    draft.className = "column column--draft";
+    draft.innerHTML =
+      '<div class="column__head">' +
+        '<input type="text" id="new-column-input" class="column__name-input" ' +
+        'placeholder="column name..." aria-label="name the new column">' +
+      '</div>';
+
+    /* Before the first column that is not an open one, i.e. before completed. */
+    const columnElements = Array.from(board.querySelectorAll(".column"));
+    const firstClosed = columnElements[openColumnCount()] || null;
+    if (firstClosed) board.insertBefore(draft, firstClosed);
+    else board.appendChild(draft);
+
+    const input = draft.querySelector("input");
+    input.focus();
+    draft.scrollIntoView({ block: "nearest", inline: "end", behavior: "smooth" });
+
+    /* Taking the input out of the page blurs it, which would call this a
+       second time, so the draft is only ever settled once. */
+    let settled = false;
+
+    function closeDraft() {
+      if (settled) return false;
+      settled = true;
+      input.removeEventListener("blur", closeDraft);
+      if (draft.parentNode) draft.remove();
+      return true;
+    }
+
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        const name = input.value.trim();
+        if (name === "") {
+          closeDraft();
+          return;
+        }
+
+        const column = {
+          id: "col-" + Date.now().toString(36),
+          name: name,
+          kind: "open",
+          fixed: false
+        };
+
+        MP.columns.splice(openColumnCount(), 0, column);
+        MP.saveColumns();
+
+        closeDraft();
+        renderColumns();
+        renderTasks();
+      }
+
+      if (event.key === "Escape") closeDraft();
     });
 
-    const card = event.target.closest(".task");
-    const toggle = document.getElementById("task-" + card.dataset.id + "-toggle");
+    input.addEventListener("blur", closeDraft);
+  }
 
-    if (!toggle.checked) {
-      toggle.checked = true;
+  const addColumnBtn = document.getElementById("add-column-btn");
+  if (addColumnBtn) addColumnBtn.addEventListener("click", startNewColumn);
+
+  function openDeleteColumnDialog(id) {
+    const column = MP.columnById(id);
+    if (!column || column.fixed) return;
+
+    const stranded = tasks.filter(function (task) {
+      return task.status === id;
+    }).length;
+
+    const fallback = MP.columnById(MP.firstOpenColumn());
+
+    pendingColumnId = id;
+    deleteColumnName.textContent = column.name;
+    deleteColumnHint.textContent = stranded === 0
+      ? "the column is empty, so nothing moves."
+      : stranded + (stranded === 1 ? " task moves" : " tasks move") +
+        " back to " + (fallback ? fallback.name : "to do") + ". no work is deleted.";
+
+    deleteColumnDialog.showModal();
+  }
+
+  function closeDeleteColumnDialog() {
+    pendingColumnId = null;
+    deleteColumnDialog.close();
+  }
+
+  document.getElementById("delete-column-keep").addEventListener("click", closeDeleteColumnDialog);
+
+  document.getElementById("delete-column-confirm").addEventListener("click", function () {
+    const id = pendingColumnId;
+    if (id === null) return;
+
+    MP.columns = MP.columns.filter(function (column) {
+      return column.id !== id;
+    });
+    MP.saveColumns();
+
+    /* The tasks outlive the column they were in. */
+    const fallback = MP.firstOpenColumn();
+    tasks.forEach(function (task) {
+      if (task.status === id) task.status = fallback;
+    });
+
+    closeDeleteColumnDialog();
+    renderColumns();
+    renderTasks();
+  });
+
+  /* --------------------------------------------------------------------------
+     Search
+     -------------------------------------------------------------------------- */
+
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      renderTasks();
+    });
+  }
+
+  /* "/" focuses the search box, like the placeholder promises. */
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "/") return;
+    const tag = document.activeElement ? document.activeElement.tagName : "";
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (!searchInput) return;
+    event.preventDefault();
+    searchInput.focus();
+  });
+
+  /* --------------------------------------------------------------------------
+     Cancel / delete dialogs
+     -------------------------------------------------------------------------- */
+
+  function openCancelDialog(task) {
+    pendingCancelId = task.id;
+    cancelDialogTask.textContent = task.title;
+    cancelReasonInput.value = task.cancelReason || "";
+    cancelDialog.showModal();
+    cancelReasonInput.focus();
+  }
+
+  function openDeleteDialog(task) {
+    pendingDeleteId = task.id;
+    deleteDialogTask.textContent = task.title;
+    deleteDialog.showModal();
+  }
+
+  if (cancelDialog) {
+    document.getElementById("cancel-dialog-keep").addEventListener("click", function () {
+      pendingCancelId = null;
+      cancelDialog.close();
+    });
+
+    document.getElementById("cancel-dialog-confirm").addEventListener("click", function () {
+      const task = findTask(pendingCancelId);
+      if (task) setStatus(task, "cancelled", cancelReasonInput.value.trim());
+      pendingCancelId = null;
+      cancelDialog.close();
+      renderTasks();
+    });
+  }
+
+  if (deleteDialog) {
+    document.getElementById("delete-dialog-keep").addEventListener("click", function () {
+      pendingDeleteId = null;
+      deleteDialog.close();
+    });
+
+    document.getElementById("delete-dialog-confirm").addEventListener("click", function () {
+      const task = findTask(pendingDeleteId);
+      if (task) {
+        if (MP.timer) MP.timer.taskRemoved(task.id);
+        tasks.splice(tasks.indexOf(task), 1);
+      }
+      pendingDeleteId = null;
+      deleteDialog.close();
+      renderTasks();
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     One click listener for the whole board (event delegation)
+     -------------------------------------------------------------------------- */
+
+  document.addEventListener("click", function (event) {
+    const action = event.target.dataset ? event.target.dataset.action : undefined;
+    const taskId = event.target.dataset && event.target.dataset.taskId !== undefined
+      ? Number(event.target.dataset.taskId)
+      : null;
+
+    if (event.target.classList.contains("subtask__delete")) {
+      const task = findTask(taskId);
+      task.subtasks.splice(Number(event.target.dataset.subtaskIndex), 1);
+      renderTasks();
+      return;
+    }
+
+    if (action === "toggle-subtask") {
+      const task = findTask(taskId);
+      const index = Number(event.target.dataset.subtaskIndex);
+      task.subtasks[index].done = !task.subtasks[index].done;
+      renderTasks();
+      return;
+    }
+
+    if (event.target.closest(".checklist__item--ghost")) {
+      const ghostItem = event.target.closest(".checklist__item--ghost");
+      const id = Number(ghostItem.dataset.taskId);
+
+      const inputHTML = `<input type="text" class="search__input" placeholder="subtask title...">`;
+      ghostItem.insertAdjacentHTML("beforebegin", inputHTML);
+
+      const input = ghostItem.previousElementSibling;
+      input.focus();
+
+      input.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Enter") {
+          const text = input.value.trim();
+          if (text !== "") findTask(id).subtasks.push({ text: text, done: false });
+          input.remove();
+          renderTasks();
+        }
+
+        if (keyEvent.key === "Escape") input.remove();
+      });
+      return;
+    }
+
+    if (action === "edit-subtask") {
+      const span = event.target;
+      const task = findTask(taskId);
+      const index = Number(span.dataset.subtaskIndex);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "search__input";
+      input.value = task.subtasks[index].text;
+      span.replaceWith(input);
+      input.focus();
+
+      function saveSubtask() {
+        const text = input.value.trim();
+        if (text !== "") task.subtasks[index].text = text;
+        justSavedEdit = true;
+        renderTasks();
+      }
+
+      input.addEventListener("blur", saveSubtask);
+      input.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Enter" || keyEvent.key === "Escape") saveSubtask();
+      });
+      return;
+    }
+
+    if (action === "finish") {
+      const task = findTask(taskId);
+      setStatus(task, "completed");
+      renderTasks();
+      return;
+    }
+
+    if (action === "reopen") {
+      const task = findTask(taskId);
+      setStatus(task, "todo");
+      task.cancelReason = "";
+      renderTasks();
+      return;
+    }
+
+    if (action === "cancel") {
+      openCancelDialog(findTask(taskId));
+      return;
+    }
+
+    if (action === "delete") {
+      openDeleteDialog(findTask(taskId));
+      return;
+    }
+
+    if (action === "collapse") {
+      const card = event.target.closest(".task");
+      const toggle = document.getElementById("task-" + card.dataset.id + "-toggle");
+      toggle.checked = false;
       toggle.dispatchEvent(new Event("change", { bubbles: true }));
       return;
     }
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "task__head-input";
-    input.value = task.title;
+    if (action === "focus") {
+      const task = findTask(taskId);
 
-    span.replaceWith(input);
-    input.focus();
-
-    function saveTitle() {
-      const newTitle = input.value.trim();
-      if (newTitle !== "") {
-        task.title = newTitle;
+      /* Starting a pomodoro on a task means it is being worked on now, from
+         whichever waiting column it sat in. A task already finished or
+         cancelled stays where it is. */
+      const from = MP.columnById(task.status);
+      if (from && from.kind === "open" && task.status !== "in-progress") {
+        setStatus(task, "in-progress");
       }
-      justSavedEdit = true;
+      if (MP.timer) MP.timer.focusTask(taskId);
       renderTasks();
-    }
-
-    input.addEventListener("blur", saveTitle);
-    input.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        saveTitle();
-      }
-    });
-  } else if (event.target.dataset.action === "edit-notes") {
-    const paragraph = event.target;
-    const taskId = Number(paragraph.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
-    });
-
-    const textarea = document.createElement("textarea");
-    textarea.className = "task__notes-input";
-    textarea.value = task.notes;
-
-    paragraph.replaceWith(textarea);
-    textarea.focus();
-
-    function saveNotes() {
-      task.notes = textarea.value.trim();
-      justSavedEdit = true;
-      renderTasks();
-    }
-
-    textarea.addEventListener("blur", saveNotes);
-    textarea.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        saveNotes();
-      }
-    });
-  } else if (event.target.closest(".task__head") && !event.target.closest(".task__head-label") && !event.target.closest(".task__actions")) {
-    if (justSavedEdit) {
-      justSavedEdit = false;
       return;
     }
-    const card = event.target.closest(".task");
-    const toggle = document.getElementById("task-" + card.dataset.id + "-toggle");
-    toggle.checked = !toggle.checked;
-    toggle.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-});
 
-document.addEventListener("change", function (event) {
-  if (event.target.classList.contains("task__toggle")) {
-    const taskId = Number(event.target.dataset.taskId);
-    const task = tasks.find(function (t) {
-      return t.id === taskId;
-    });
+    if (action === "edit-title") {
+      const span = event.target;
+      const task = findTask(taskId);
+      const card = span.closest(".task");
+      const toggle = document.getElementById("task-" + card.dataset.id + "-toggle");
+
+      // First click on a collapsed card opens it; editing needs a second click.
+      if (!toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event("change", { bubbles: true }));
+        return;
+      }
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "task__head-input";
+      input.value = task.title;
+      span.replaceWith(input);
+      input.focus();
+
+      function saveTitle() {
+        const newTitle = input.value.trim();
+        if (newTitle !== "") task.title = newTitle;
+        justSavedEdit = true;
+        renderTasks();
+        if (MP.timer) MP.timer.render();
+      }
+
+      input.addEventListener("blur", saveTitle);
+      input.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Enter" || keyEvent.key === "Escape") saveTitle();
+      });
+      return;
+    }
+
+    if (action === "edit-notes") {
+      const paragraph = event.target;
+      const task = findTask(taskId);
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "task__notes-input";
+      textarea.value = task.notes;
+      paragraph.replaceWith(textarea);
+      textarea.focus();
+
+      function saveNotes() {
+        task.notes = textarea.value.trim();
+        justSavedEdit = true;
+        renderTasks();
+      }
+
+      textarea.addEventListener("blur", saveNotes);
+      textarea.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Escape") saveNotes();
+      });
+      return;
+    }
+
+    if (action === "edit-due") {
+      const paragraph = event.target;
+      const task = findTask(taskId);
+
+      const input = document.createElement("input");
+      input.type = "datetime-local";
+      input.className = "task__due-input";
+      input.value = dueDateInputValue(task);
+      paragraph.replaceWith(input);
+      input.focus();
+
+      function saveDue() {
+        task.dueDate = input.value === "" ? "" : new Date(input.value).toISOString();
+        justSavedEdit = true;
+        renderTasks();
+      }
+
+      input.addEventListener("blur", saveDue);
+      input.addEventListener("keydown", function (keyEvent) {
+        if (keyEvent.key === "Enter" || keyEvent.key === "Escape") saveDue();
+      });
+      return;
+    }
+
+    // Clicking the empty part of a card's head expands or collapses it.
+    if (event.target.closest(".task__head") &&
+        !event.target.closest(".task__head-label") &&
+        !event.target.closest(".task__actions")) {
+      if (justSavedEdit) {
+        justSavedEdit = false;
+        return;
+      }
+
+      const card = event.target.closest(".task");
+      if (!card.dataset.id) return;
+      const toggle = document.getElementById("task-" + card.dataset.id + "-toggle");
+      toggle.checked = !toggle.checked;
+      toggle.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  });
+
+  document.addEventListener("change", function (event) {
+    if (!event.target.classList.contains("task__toggle")) return;
+    const task = findTask(Number(event.target.dataset.taskId));
+    if (!task) return;
     task.expanded = event.target.checked;
-  }
-});
+    MP.saveTasks();
+  });
 
-let dragStartX = 0;
-let dragStartY = 0;
-let isDraggingCard = false;
+  /* --------------------------------------------------------------------------
+     Drag and drop — mouse-tracked, not the native HTML5 API
+     -------------------------------------------------------------------------- */
 
-document.addEventListener("mousedown", function (event) {
-  const card = event.target.closest(".task");
-  if (!card || !card.dataset.id) return;
-  document.body.style.userSelect = "none";
-  draggedElement = card;
-  draggedTaskId = Number(card.dataset.id);
-  dragStartX = event.clientX;
-  dragStartY = event.clientY;
-});
+  const placeholder = document.createElement("div");
+  placeholder.className = "drop-placeholder";
 
-document.addEventListener("mousemove", function (event) {
-  if (draggedElement === null) return;
+  let draggedElement = null;
+  let draggedTaskId = null;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+  let isDraggingCard = false;
 
-  if (!isDraggingCard) {
-    const deltaX = Math.abs(event.clientX - dragStartX);
-    const deltaY = Math.abs(event.clientY - dragStartY);
+  document.addEventListener("mousedown", function (event) {
+    // Controls inside a card must keep working, so they never start a drag.
+    if (event.target.closest("button, input, textarea, .checklist__item, .task__notes, .task__due")) return;
 
-    if (deltaX > 5 || deltaY > 5) {
+    const card = event.target.closest(".task");
+    if (!card || !card.dataset.id) return;
+
+    document.body.style.userSelect = "none";
+    draggedElement = card;
+    draggedTaskId = Number(card.dataset.id);
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+  });
+
+  document.addEventListener("mousemove", function (event) {
+    if (draggedElement === null) return;
+
+    if (!isDraggingCard) {
+      const deltaX = Math.abs(event.clientX - dragStartX);
+      const deltaY = Math.abs(event.clientY - dragStartY);
+      if (deltaX <= 5 && deltaY <= 5) return;
+
       isDraggingCard = true;
 
       const rect = draggedElement.getBoundingClientRect();
@@ -458,75 +809,68 @@ document.addEventListener("mousemove", function (event) {
       draggedElement.style.top = rect.top + "px";
       draggedElement.style.pointerEvents = "none";
     }
-  }
 
-  if (isDraggingCard) {
     draggedElement.style.left = (event.clientX - offsetX) + "px";
     draggedElement.style.top = (event.clientY - offsetY) + "px";
-    draggedElement.style.top = (event.clientY - offsetY) + "px";
 
     const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
     const column = elementBelow ? elementBelow.closest(".column") : null;
+    if (!column) return;
 
-    if (column) {
-      const cardsInColumn = Array.from(column.querySelectorAll(".task")).filter(function (card) {
-        return card !== draggedElement;
-      });
+    const cardsInColumn = Array.from(column.querySelectorAll(".task")).filter(function (card) {
+      return card !== draggedElement;
+    });
 
-      let nextCard = null;
-      for (let i = 0; i < cardsInColumn.length; i++) {
-        const rect = cardsInColumn[i].getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-        if (event.clientY < midpoint) {
-          nextCard = cardsInColumn[i];
-          break;
-        }
-      }
-
-      if (nextCard) {
-        column.insertBefore(placeholder, nextCard);
-      } else {
-        column.appendChild(placeholder);
+    let nextCard = null;
+    for (let i = 0; i < cardsInColumn.length; i = i + 1) {
+      const rect = cardsInColumn[i].getBoundingClientRect();
+      if (event.clientY < rect.top + rect.height / 2) {
+        nextCard = cardsInColumn[i];
+        break;
       }
     }
-  }
-});
 
-document.addEventListener("mouseup", function (event) {
-  if (draggedElement === null) return;
+    if (nextCard) column.insertBefore(placeholder, nextCard);
+    else column.appendChild(placeholder);
+  });
 
-  if (isDraggingCard) {
-    const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
-    const column = elementBelow ? elementBelow.closest(".column") : null;
+  document.addEventListener("mouseup", function (event) {
+    if (draggedElement === null) return;
 
-    if (column) {
-      const task = tasks.find(function (t) {
-        return t.id === draggedTaskId;
-      });
-      task.status = column.dataset.status;
+    if (isDraggingCard) {
+      const elementBelow = document.elementFromPoint(event.clientX, event.clientY);
+      const column = elementBelow ? elementBelow.closest(".column") : null;
 
-      const nextCard = placeholder.nextElementSibling;
-      const nextTaskId = nextCard ? Number(nextCard.dataset.id) : null;
+      if (column) {
+        const task = findTask(draggedTaskId);
+        if (task.status !== column.dataset.status) setStatus(task, column.dataset.status);
 
-      const currentIndex = tasks.indexOf(task);
-      tasks.splice(currentIndex, 1);
+        const nextCard = placeholder.nextElementSibling;
+        const nextId = nextCard && nextCard.dataset.id ? Number(nextCard.dataset.id) : null;
 
-      if (nextTaskId !== null) {
-        const nextIndex = tasks.findIndex(function (t) {
-          return t.id === nextTaskId;
-        });
-        tasks.splice(nextIndex, 0, task);
-      } else {
-        tasks.push(task);
+        tasks.splice(tasks.indexOf(task), 1);
+
+        if (nextId !== null) {
+          tasks.splice(tasks.findIndex(function (t) { return t.id === nextId; }), 0, task);
+        } else {
+          tasks.push(task);
+        }
       }
 
       placeholder.remove();
       renderTasks();
     }
-  }
 
-  draggedElement = null;
-  draggedTaskId = null;
-  isDraggingCard = false;
-  document.body.style.userSelect = "";
-});
+    draggedElement = null;
+    draggedTaskId = null;
+    isDraggingCard = false;
+    document.body.style.userSelect = "";
+  });
+
+  /* --------------------------------------------------------------------------
+     Go
+     -------------------------------------------------------------------------- */
+
+  renderColumns();
+  renderTasks();
+})();

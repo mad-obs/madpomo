@@ -1,0 +1,35 @@
+/* --------------------------------------------------------------------------
+   9. React Build Only — classes the single-page version needs
+
+   The plain-JS build moves the real card around the DOM while dragging. React
+   owns the DOM, so the card stays where it is, hidden, and a copy follows the
+   pointer instead.
+   -------------------------------------------------------------------------- */
+
+/* the active page in the header nav */
+.header__link--active {
+  color: var(--color-accent);
+}
+
+/* placeholder + card travel together inside a column */
+.column__slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* the card under the pointer */
+.task-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.task--dragging {
+  display: none;
+}
+
+/* while a view's chunk is still loading */
+.view-loading {
+  padding: var(--space-6);
+}

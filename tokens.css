@@ -22,6 +22,9 @@
   --color-border-strong: #5c5c5c;
   --color-border-focus: #ffa600;
 
+  /* color / overlay (dims the page behind a dialog or the tour) */
+  --color-overlay: rgba(10, 10, 10, 0.72);
+
   /* color / feedback (destructive actions only) */
   --color-feedback-danger: #ff6b6b;
 
@@ -29,7 +32,6 @@
   --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
-  --font-size-md: 16px;
   --font-size-lg: 24px;
   --font-size-xl: 32px;
   --font-size-timer: clamp(64px, 6vw, 96px);
@@ -61,9 +63,9 @@
 
   /* border / radius */
   --border-width-thin: 1px;
+  --border-width-focus: 2px;
   --border-width-thick: 4px;
   --radius-none: 0;
-  --radius-sm: 2px;
 
   /* motion */
   --duration-fast: 120ms;

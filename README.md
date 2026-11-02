@@ -27,18 +27,45 @@ Designed first in Figma, refined through a few rounds of feedback, then hand-bui
 
 ## Status
 
-This project is being built in deliberate stages — HTML, then CSS, then JavaScript, then a React + Vite rebuild — as a way to learn front-end development step by step. **The current state is HTML + CSS only.** The board, report, settings, and about pages are all built and visually complete, but none of the interactive behavior described above (timer, localStorage persistence, task cancellation, live report data) is wired up yet.
+This project is being built in deliberate stages — HTML, then CSS, then JavaScript, then a React + Vite rebuild — as a way to learn front-end development step by step. **The plain-JavaScript app is complete and working.** Everything described above runs: the timer (and it keeps counting as you move between pages), the board, cancellation with a reason, the settings, and a report built entirely from your own logged sessions.
 
 React and Vite aren't required for the app itself — plain JavaScript would cover everything — but rebuilding it in React afterward is a deliberate part of the learning path.
 
+### How it is put together
+
+No build step and no dependencies. Open `index.html` and it runs.
+
+| File | What it does |
+|---|---|
+| `storage.js` | the four `localStorage` keys, defaults, and the shared `MP` namespace |
+| `stats.js` | dates and every number the report and sidebar show |
+| `timer.js` | the pomodoro timer, on every page |
+| `shell.js` | header date, task overview, 7-day heatmap |
+| `app.js` | the board: cards, editing, drag-and-drop, search |
+| `report.js` | the report page |
+| `settings-ui.js` | the settings page |
+| `tokens.css` / `style.css` | design tokens and all layout + components |
+
+Each focus session is written to `madpomo.sessions` with how long it ran, how many times it was paused, and whether it reached 00:00. The report is derived from that log, so nothing on it is hardcoded.
+
 ### Roadmap
 
-- [ ] JavaScript: timer logic, `localStorage` persistence, task cancellation with reason capture, live report calculations
-- [ ] Rebuild in React + Vite, as a comparison to the plain-JS version
-- [ ] Desktop packaging for offline use and native OS notifications
+- [x] JavaScript: timer logic, `localStorage` persistence, task cancellation with reason capture, live report calculations
+- [x] Rebuild in React + Vite as a single page, as a comparison to the plain-JS version
+- [ ] Windows install package (Tauri), with real Windows toast notifications instead of browser ones
 - [ ] Language support: en-US and pt-BR
 
-## Branches
+## Versions
 
-- `main` — active development, moving through the stages above
-- `demo-html-css` — a frozen snapshot of the HTML/CSS-only version, for anyone who wants to browse the raw design and markup without the rest of the app
+- **Design demo** — HTML and CSS only, nothing wired up. A frozen snapshot of the markup and the design system, for anyone who wants to read those without the app around them. Branch `demo-html-css`.
+- **Web app** — the full thing described above, plain JavaScript, no build step. Four HTML pages, one per view.
+- **React app** — the same app as a single page, in `react/`. Clicking settings, the report or about swaps the view without a reload, and the pomodoro keeps counting while you move around. Same `localStorage` keys and the same `style.css`, so the two versions share both their data and their design system. `npm run dev` to run it, `npm run build` for `react/dist`.
+- **Windows app** — planned. The same code in a Tauri shell, so the end of a pomodoro raises a real Windows notification in the corner whether or not a browser is open. See `TODO.md` for the plan.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE). Free to read, use, change and ship, commercially included. Keep the notice with whatever you redistribute, and say where it came from.
+
+The name stays with this project. Section 6 of the licence covers trade names, so a fork goes out under a name of its own.
+
+The design side — `tokens.css`, `style.css`, the Figma file and the written copy — is additionally available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): the same bargain in Creative Commons terms, use it anywhere and credit the original.
