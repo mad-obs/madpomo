@@ -231,3 +231,82 @@ export function defaultTimer() {
 export function loadTimer() {
   return Object.assign(defaultTimer(), read(KEYS.timer, {}));
 }
+
+/* --------------------------------------------------------------------------
+   Backup files
+
+   Same format as the plain build writes, so a file exported from either one
+   imports into the other. The timer and the tutorial flag stay out of it:
+   they describe this browser, not your work.
+
+   readBackup only checks the shape. It does not need to check the values,
+   because nothing here is trusted straight afterwards — the page reloads and
+   every key goes back through the loaders above, where tasks are normalized,
+   unknown columns dropped and repeated sessions removed.
+   -------------------------------------------------------------------------- */
+
+export const BACKUP_VERSION = 1;
+
+/* The four keys a backup carries, in the order the summary names them. */
+const BACKUP_PARTS = [
+  { key: "tasks", list: true, one: "task", many: "tasks" },
+  { key: "sessions", list: true, one: "pomodoro", many: "pomodoros" },
+  { key: "columns", list: true, one: "column", many: "columns" },
+  { key: "settings", list: false, many: "settings" }
+];
+
+/* Returns { ok: true, data, summary } or { ok: false, error }, where `error`
+   is a sentence meant to be shown as it is. */
+export function readBackup(text) {
+  let parsed;
+
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    return { ok: false, error: "that file is not valid JSON." };
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.app !== "madpomo") {
+    return { ok: false, error: "that file is not a madpomo backup." };
+  }
+
+  if (typeof parsed.version === "number" && parsed.version > BACKUP_VERSION) {
+    return { ok: false, error: "that backup was written by a newer version of madpomo than this one." };
+  }
+
+  const data = {};
+  const summary = [];
+
+  BACKUP_PARTS.forEach((part) => {
+    const value = parsed[part.key];
+    if (value === undefined || value === null) return;
+
+    /* A missing key is fine — an older file restores the parts it does have.
+       A key of the wrong type is not, so it is skipped rather than written. */
+    const isArray = Array.isArray(value);
+    if (part.list ? !isArray : isArray || typeof value !== "object") return;
+
+    data[part.key] = value;
+    summary.push(part.list ? value.length + " " + (value.length === 1 ? part.one : part.many) : part.many);
+  });
+
+  if (Object.keys(data).length === 0) {
+    return { ok: false, error: "that backup has no madpomo data in it." };
+  }
+
+  return { ok: true, data, summary: summary.join(", ") };
+}
+
+/* Replaces what is stored with what the file holds. The timer is cleared
+   rather than left alone: a backup has no clock in it, and a clock carried
+   over from different data would be counting against a task that is not on
+   this board any more. The caller reloads the page straight after. */
+export function applyBackup(data) {
+  Object.keys(data).forEach((key) => write(KEYS[key], data[key]));
+
+  try {
+    localStorage.removeItem(KEYS.timer);
+  } catch (error) {
+    console.warn("madpomo: could not clear " + KEYS.timer + ".", error);
+  }
+}

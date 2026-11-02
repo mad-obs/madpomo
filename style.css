@@ -19,7 +19,25 @@
    ========================================================================== */
 
 @import url('tokens.css');
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+/* Space Mono ships with the app rather than coming from a CDN, so the page
+   makes no outbound request and the type is right offline too. Only the two
+   weights tokens.css names are here; nothing in the app sets font-style. */
+@font-face {
+  font-family: 'Space Mono';
+  src: url('fonts/space-mono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  src: url('fonts/space-mono-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* --------------------------------------------------------------------------
    1. Global / Reset
@@ -580,6 +598,12 @@ button {
   color: var(--color-text-secondary);
 }
 
+/* The hint doubles as the error line for a file that cannot be imported, so
+   the message sits where the explanation already was. */
+.setting__hint--error {
+  color: var(--color-feedback-danger);
+}
+
 /* Navigable row with an arrow — used on Settings (Legal) and About (Find me, Terms) */
 .link {
   display: flex;
@@ -604,6 +628,10 @@ button.link {
   border-bottom: var(--border-width-thin) solid var(--color-border);
   background: none;
   font: inherit;
+  /* a <button> centres its text by default, which the <a class="link"> rows
+     do not. The label is short enough to show the offset; the hint under it
+     fills the row, so only the label looked indented. */
+  text-align: left;
   cursor: pointer;
 }
 

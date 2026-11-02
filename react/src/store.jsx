@@ -159,18 +159,39 @@ export function MadpomoProvider({ children }) {
     lastTickRef.current = Date.now();
     const id = setInterval(() => {
       const now = Date.now();
-      // Measured against the wall clock, so a background tab does not drift.
-      const elapsed = Math.max(1, Math.round((now - lastTickRef.current) / 1000));
-      lastTickRef.current = now;
+      /* Measured against the wall clock, so a background tab does not drift.
+         Whole seconds only, with the remainder carried instead of reset to
+         `now`: flooring this at one second made a throttled tab race through
+         its queued ticks a second at a time, and resetting dropped the
+         leftover milliseconds on every tick. */
+      const elapsed = Math.floor((now - lastTickRef.current) / 1000);
+      if (elapsed < 1) return;
+      lastTickRef.current += elapsed * 1000;
       setTimer((t) => (t.isRunning ? { ...t, timeLeft: t.timeLeft - elapsed } : t));
     }, 1000);
 
     return () => clearInterval(id);
   }, [timer.isRunning]);
 
-  /* Phase over. Logs the pomodoro, then moves on after three seconds. */
+  /* Phase over. Logs the pomodoro, then moves on after three seconds.
+
+     The three-second wait is held in a ref and deliberately NOT cleared by
+     this effect's cleanup. It used to be, and that cancelled the advance
+     every time: the effect ends by setting isRunning false and timeLeft 0,
+     which are its own two dependencies, so React ran the cleanup before the
+     timeout could fire and the clock stayed on 00:00 for good. A ref also
+     keeps it from running twice for one phase end. */
+  const phaseOverRef = useRef(false);
+  const advanceRef = useRef(null);
+
   useEffect(() => {
-    if (!timer.isRunning || timer.timeLeft > 0) return undefined;
+    if (!timer.isRunning || timer.timeLeft > 0) {
+      phaseOverRef.current = false;
+      return undefined;
+    }
+
+    if (phaseOverRef.current) return undefined;
+    phaseOverRef.current = true;
 
     const wasFocus = timer.phase === "focus";
     let counted = false;
@@ -196,7 +217,8 @@ export function MadpomoProvider({ children }) {
     }));
 
     // Three seconds on 00:00 so the end of a session is visible.
-    const id = setTimeout(() => {
+    clearTimeout(advanceRef.current);
+    advanceRef.current = setTimeout(() => {
       setTimer((t) => {
         if (wasFocus) {
           return {
@@ -221,8 +243,11 @@ export function MadpomoProvider({ children }) {
       });
     }, 3000);
 
-    return () => clearTimeout(id);
+    return undefined;
   }, [timer.isRunning, timer.timeLeft]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* The pending advance only has to be dropped if the app itself goes away. */
+  useEffect(() => () => clearTimeout(advanceRef.current), []);
 
   /* A changed length applies at once when the clock is idle. */
   useEffect(() => {

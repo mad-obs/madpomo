@@ -144,6 +144,81 @@
   }
 
   /* --------------------------------------------------------------------------
+     Import — the other half of export
+
+     An export nothing can read back is not a backup, so this is what makes
+     the file worth keeping. It reads the file, says what is in it, and
+     replaces nothing until that has been confirmed.
+     -------------------------------------------------------------------------- */
+
+  const importBtn = document.getElementById("import-btn");
+  const importInput = document.getElementById("import-input");
+  const importHint = document.getElementById("import-hint");
+  const importDialog = document.getElementById("import-dialog");
+  const importHintText = importHint ? importHint.textContent : "";
+
+  /* Held between picking the file and confirming the replacement. */
+  let pendingBackup = null;
+
+  function setImportProblem(message) {
+    if (!importHint) return;
+    importHint.textContent = message;
+    importHint.classList.add("setting__hint--error");
+  }
+
+  function clearImportProblem() {
+    if (!importHint) return;
+    importHint.textContent = importHintText;
+    importHint.classList.remove("setting__hint--error");
+  }
+
+  if (importBtn && importInput && importDialog) {
+    importBtn.addEventListener("click", function () {
+      clearImportProblem();
+      importInput.click();
+    });
+
+    importInput.addEventListener("change", function () {
+      const file = importInput.files && importInput.files[0];
+      if (!file) return;
+
+      file.text().then(function (text) {
+        /* Cleared either way: without this, picking the same file a second
+           time is not a change and the event never fires again. */
+        importInput.value = "";
+
+        const result = MP.readBackup(text);
+
+        if (!result.ok) {
+          setImportProblem(result.error);
+          return;
+        }
+
+        pendingBackup = result.data;
+        document.getElementById("import-dialog-summary").textContent = result.summary;
+        importDialog.showModal();
+      }).catch(function (error) {
+        importInput.value = "";
+        setImportProblem("that file could not be read.");
+        console.warn("madpomo: could not read the chosen file.", error);
+      });
+    });
+
+    document.getElementById("import-dialog-keep").addEventListener("click", function () {
+      pendingBackup = null;
+      importDialog.close();
+    });
+
+    document.getElementById("import-dialog-confirm").addEventListener("click", function () {
+      if (!pendingBackup) return;
+      MP.applyBackup(pendingBackup);
+      pendingBackup = null;
+      importDialog.close();
+      window.location.reload();
+    });
+  }
+
+  /* --------------------------------------------------------------------------
      Help — the tutorial lives on the board, so both buttons send you there
      -------------------------------------------------------------------------- */
 

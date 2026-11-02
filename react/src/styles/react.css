@@ -33,3 +33,22 @@
 .view-loading {
   padding: var(--space-6);
 }
+
+/* An open card.
+
+   The plain build keeps a hidden checkbox in every card (`.task__toggle`) and
+   style.css switches the open parts on with `.task__toggle:checked ~ ...`.
+   React has no such input: it renders the body and the head actions only when
+   `task.expanded` is true. So those shared rules never match here, and the
+   minimize button sat in the DOM at 0x0 because `.task__actions` was left on
+   its `display: none` default. These two restate what the checkbox would have
+   done, keyed off the card's own modifier class instead. */
+.task--open .task__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Matches `.task:has(.task__toggle:checked)` in style.css. */
+.task--open {
+  border-left-color: var(--color-accent);
+}

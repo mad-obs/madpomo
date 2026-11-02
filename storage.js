@@ -292,3 +292,87 @@ MP.dataChanged = function () {
     }
   });
 };
+
+/* --------------------------------------------------------------------------
+   Backup files
+
+   Export writes one JSON file holding four of the six keys. The timer and the
+   tutorial flag are left out on purpose: they describe this browser, not your
+   work. Import is the way back in — without it an export is a file nothing can
+   read, which is no backup at all.
+
+   readBackup only checks the shape of the file. It does not need to check the
+   values, because nothing here is trusted straight afterwards: the page
+   reloads, and every key goes back through the loaders above, where tasks are
+   normalized, unknown columns dropped and repeated sessions removed.
+   -------------------------------------------------------------------------- */
+
+MP.BACKUP_VERSION = 1;
+
+/* The four keys a backup carries, in the order the summary names them. */
+MP.BACKUP_PARTS = [
+  { key: "tasks", list: true, one: "task", many: "tasks" },
+  { key: "sessions", list: true, one: "pomodoro", many: "pomodoros" },
+  { key: "columns", list: true, one: "column", many: "columns" },
+  { key: "settings", list: false, many: "settings" }
+];
+
+/* Returns { ok: true, data, summary } or { ok: false, error }, where `error`
+   is a sentence meant to be shown as it is. */
+MP.readBackup = function (text) {
+  let parsed;
+
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    return { ok: false, error: "that file is not valid JSON." };
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.app !== "madpomo") {
+    return { ok: false, error: "that file is not a madpomo backup." };
+  }
+
+  if (typeof parsed.version === "number" && parsed.version > MP.BACKUP_VERSION) {
+    return { ok: false, error: "that backup was written by a newer version of madpomo than this one." };
+  }
+
+  const data = {};
+  const summary = [];
+
+  MP.BACKUP_PARTS.forEach(function (part) {
+    const value = parsed[part.key];
+    if (value === undefined || value === null) return;
+
+    /* A missing key is fine — an older file, or one exported before that key
+       existed, restores the parts it does have. A key of the wrong type is
+       not fine, so it is skipped rather than written. */
+    if (part.list ? !Array.isArray(value) : Array.isArray(value) || typeof value !== "object") return;
+
+    data[part.key] = value;
+    summary.push(
+      part.list ? value.length + " " + (value.length === 1 ? part.one : part.many) : part.many
+    );
+  });
+
+  if (Object.keys(data).length === 0) {
+    return { ok: false, error: "that backup has no madpomo data in it." };
+  }
+
+  return { ok: true, data: data, summary: summary.join(", ") };
+};
+
+/* Replaces what is stored with what the file holds. The timer is cleared
+   rather than left alone: a backup has no clock in it, and a clock carried
+   over from different data would be counting against a task that is not on
+   this board any more. The caller reloads the page straight after. */
+MP.applyBackup = function (data) {
+  Object.keys(data).forEach(function (key) {
+    MP.write(MP.KEYS[key], data[key]);
+  });
+
+  try {
+    localStorage.removeItem(MP.KEYS.timer);
+  } catch (error) {
+    console.warn("madpomo: could not clear " + MP.KEYS.timer + ".", error);
+  }
+};

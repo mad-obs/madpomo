@@ -17,8 +17,15 @@ export default function SettingsView({ params }) {
   const [resetting, setResetting] = useState(false);
   const [promptReset, setPromptReset] = useState(false);
 
+  /* The file picked for import, held between choosing it and confirming the
+     replacement; `importError` is the sentence shown in place of the hint. */
+  const [pendingBackup, setPendingBackup] = useState(null);
+  const [importError, setImportError] = useState("");
+
   const legalDialog = useRef(null);
   const resetDialog = useRef(null);
+  const importDialog = useRef(null);
+  const importInput = useRef(null);
 
   useEffect(() => {
     const dialog = legalDialog.current;
@@ -33,6 +40,13 @@ export default function SettingsView({ params }) {
     if (resetting && !dialog.open) dialog.showModal();
     if (!resetting && dialog.open) dialog.close();
   }, [resetting]);
+
+  useEffect(() => {
+    const dialog = importDialog.current;
+    if (!dialog) return;
+    if (pendingBackup && !dialog.open) dialog.showModal();
+    if (!pendingBackup && dialog.open) dialog.close();
+  }, [pendingBackup]);
 
   function step(key, direction, min, max) {
     setSettings((current) => ({
@@ -80,6 +94,41 @@ export default function SettingsView({ params }) {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  /* Import — the other half of export. An export nothing can read back is
+     not a backup, so this is what makes the file worth keeping. */
+  async function chooseBackup(event) {
+    const file = event.target.files && event.target.files[0];
+
+    /* Cleared either way: without this, picking the same file a second time
+       is not a change and the event never fires again. */
+    event.target.value = "";
+    if (!file) return;
+
+    let result;
+
+    try {
+      result = db.readBackup(await file.text());
+    } catch (error) {
+      console.warn("madpomo: could not read the chosen file.", error);
+      setImportError("that file could not be read.");
+      return;
+    }
+
+    if (!result.ok) {
+      setImportError(result.error);
+      return;
+    }
+
+    setImportError("");
+    setPendingBackup(result);
+  }
+
+  function applyBackup() {
+    db.applyBackup(pendingBackup.data);
+    setPendingBackup(null);
+    window.location.reload();
   }
 
   function wipeEverything() {
@@ -257,6 +306,28 @@ export default function SettingsView({ params }) {
                 </div>
                 <button type="button" className="btn" onClick={exportData}>export</button>
               </div>
+
+              <div className="setting">
+                <div className="setting__text">
+                  <p className="setting__label">import a backup</p>
+                  <p className={"setting__hint" + (importError ? " setting__hint--error" : "")}>
+                    {importError || "Restore an exported file over what is here"}
+                  </p>
+                </div>
+                {/* The button is the real control; the input only opens the
+                    file picker, so it is never reached on its own. */}
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  ref={importInput}
+                  onChange={chooseBackup}
+                  hidden
+                />
+                <button type="button" className="btn" onClick={() => {
+                  setImportError("");
+                  importInput.current.click();
+                }}>import</button>
+              </div>
             </div>
 
             <div className="card">
@@ -284,7 +355,7 @@ export default function SettingsView({ params }) {
               <div className="setting setting--stack">
                 <div className="setting__text">
                   <p className="setting__label">reset everything</p>
-                  <p className="setting__hint">Deletes all tasks, pomodoros and reports. This cannot be undone.</p>
+                  <p className="setting__hint">Deletes every task, pomodoro, column and setting in this browser. This cannot be undone.</p>
                 </div>
                 <button type="button" className="btn btn--outline-danger" onClick={() => setResetting(true)}>
                   reset
@@ -306,7 +377,7 @@ export default function SettingsView({ params }) {
             <h3 className="dialog__heading">What Is Stored, and Where</h3>
             <p className="dialog__text">Your tasks, your pomodoro log, the timer state and your settings are saved in this browser&apos;s localStorage, on this device. They are not synced anywhere and nobody else can read them.</p>
             <h3 className="dialog__heading">What the Page Requests</h3>
-            <p className="dialog__text">Two things. The app files, from wherever it is hosted. And the Space Mono typeface from Google Fonts, which means Google sees your IP address when the page loads. Nothing else goes out.</p>
+            <p className="dialog__text">The app's own files, from wherever it is hosted. Nothing else is requested, and nothing about you is sent.</p>
             <h3 className="dialog__heading">Deleting It</h3>
             <p className="dialog__text">Reset everything under //danger zone wipes all of it at once. Clearing your browser data does the same.</p>
             <h3 className="dialog__heading">Checking Any of This</h3>
@@ -317,14 +388,14 @@ export default function SettingsView({ params }) {
             <h2 className="dialog__title">//terms of use</h2>
             <h3 className="dialog__heading">What This Is</h3>
             <p className="dialog__text">madpomo is a task board with a pomodoro timer built into it. It is free, it is open source, and it runs in your browser. There is no account, no subscription, and no server behind it.</p>
-            <h3 className="dialog__heading">No Warranty</h3>
-            <p className="dialog__text">The app is provided as-is. It has bugs I have not found yet, and it can lose your work: clearing your browser storage erases everything madpomo has saved. I am not liable for lost work or lost time.</p>
-            <h3 className="dialog__heading">Backups Are Yours to Make</h3>
-            <p className="dialog__text">Everything you type stays on your device, so nobody else can read it and nobody else can recover it for you. The export button under //data writes all of it to a file. Use it.</p>
+            <h3 className="dialog__heading">If Something Goes Wrong</h3>
+            <p className="dialog__text">Tell me. The repository is the place for it, and something I know about is something I can fix. madpomo comes as it is, without a warranty, which is the same line the Apache licence carries: in practice it means I cannot promise a fix by any particular date, or bring back work a browser has already thrown away.</p>
+            <h3 className="dialog__heading">Where Your Work Lives</h3>
+            <p className="dialog__text">In this browser, on this device, and nowhere else. Nothing you type is sent anywhere, so nobody can read it — and nobody can restore it for you either, me included, because I never have a copy. That is the trade. Export under //data writes everything to a file and import reads it back, so one export after a good stretch of work is enough to keep.</p>
             <h3 className="dialog__heading">The Code</h3>
             <p className="dialog__text">The source is public on GitHub under the Apache License 2.0. Read it, change it, build your own version on it, for free. Keep the licence and the credit with whatever you pass on. The one thing it does not hand over is the name: call your version something other than madpomo.</p>
             <h3 className="dialog__heading">Changes</h3>
-            <p className="dialog__text">These terms change when the app does. The version in this window is the current one.</p>
+            <p className="dialog__text">These terms change when the app does, and this window always shows the current text.</p>
           </>
         )}
         <div className="dialog__actions">
@@ -332,9 +403,19 @@ export default function SettingsView({ params }) {
         </div>
       </dialog>
 
+      <dialog className="dialog" ref={importDialog} onClose={() => setPendingBackup(null)}>
+        <h2 className="dialog__title">//import a backup</h2>
+        <p className="dialog__hint">this replaces every task, pomodoro, column and setting in this browser with the ones in the file. it cannot be undone.</p>
+        <p className="dialog__task">{pendingBackup ? pendingBackup.summary : ""}</p>
+        <div className="dialog__actions">
+          <button type="button" className="btn" onClick={() => setPendingBackup(null)}>keep my data</button>
+          <button type="button" className="btn btn--outline-danger" onClick={applyBackup}>replace everything</button>
+        </div>
+      </dialog>
+
       <dialog className="dialog" ref={resetDialog} onClose={() => setResetting(false)}>
         <h2 className="dialog__title">//reset everything</h2>
-        <p className="dialog__hint">this deletes every task, pomodoro and setting stored in this browser. it cannot be undone.</p>
+        <p className="dialog__hint">this deletes every task, pomodoro, column and setting stored in this browser. it cannot be undone.</p>
         <div className="dialog__actions">
           <button type="button" className="btn" onClick={() => setResetting(false)}>keep my data</button>
           <button type="button" className="btn btn--outline-danger" onClick={wipeEverything}>reset everything</button>

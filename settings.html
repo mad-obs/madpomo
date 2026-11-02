@@ -207,6 +207,17 @@
                                 <button type="button" class="btn" id="export-btn">export</button>
                             </div>
 
+                            <div class="setting">
+                                <div class="setting__text">
+                                    <p class="setting__label">import a backup</p>
+                                    <p class="setting__hint" id="import-hint">Restore an exported file over what is here</p>
+                                </div>
+                                <!-- The button is the real control; the input only opens the
+                                     file picker, so it is never reached on its own. -->
+                                <input type="file" id="import-input" accept="application/json,.json" hidden>
+                                <button type="button" class="btn" id="import-btn">import</button>
+                            </div>
+
                         </div>
 
                         <div class="card">
@@ -235,7 +246,7 @@
                             <div class="setting setting--stack">
                                 <div class="setting__text">
                                     <p class="setting__label">reset everything</p>
-                                    <p class="setting__hint">Deletes all tasks, pomodoros and reports. This cannot be undone.</p>
+                                    <p class="setting__hint">Deletes every task, pomodoro, column and setting in this browser. This cannot be undone.</p>
                                 </div>
                                 <button type="button" class="btn btn--outline-danger" id="reset-all-btn">reset</button>
                             </div>
@@ -254,17 +265,17 @@
         <h3 class="dialog__heading">What This Is</h3>
         <p class="dialog__text">madpomo is a task board with a pomodoro timer built into it. It is free, it is open source, and it runs in your browser. There is no account, no subscription, and no server behind it.</p>
 
-        <h3 class="dialog__heading">No Warranty</h3>
-        <p class="dialog__text">The app is provided as-is. It has bugs I have not found yet, and it can lose your work: clearing your browser storage erases everything madpomo has saved. I am not liable for lost work or lost time.</p>
+        <h3 class="dialog__heading">If Something Goes Wrong</h3>
+        <p class="dialog__text">Tell me. The repository is the place for it, and something I know about is something I can fix. madpomo comes as it is, without a warranty, which is the same line the Apache licence carries: in practice it means I cannot promise a fix by any particular date, or bring back work a browser has already thrown away.</p>
 
-        <h3 class="dialog__heading">Backups Are Yours to Make</h3>
-        <p class="dialog__text">Everything you type stays on your device, so nobody else can read it and nobody else can recover it for you. The export button under //data writes all of it to a file. Use it.</p>
+        <h3 class="dialog__heading">Where Your Work Lives</h3>
+        <p class="dialog__text">In this browser, on this device, and nowhere else. Nothing you type is sent anywhere, so nobody can read it — and nobody can restore it for you either, me included, because I never have a copy. That is the trade. Export under //data writes everything to a file and import reads it back, so one export after a good stretch of work is enough to keep.</p>
 
         <h3 class="dialog__heading">The Code</h3>
         <p class="dialog__text">The source is public on GitHub under the Apache License 2.0. Read it, change it, build your own version on it, for free. Keep the licence and the credit with whatever you pass on. The one thing it does not hand over is the name: call your version something other than madpomo.</p>
 
         <h3 class="dialog__heading">Changes</h3>
-        <p class="dialog__text">These terms change when the app does. The version in this window is the current one.</p>
+        <p class="dialog__text">These terms change when the app does, and this window always shows the current text.</p>
 
         <div class="dialog__actions">
             <button type="button" class="btn btn--primary" data-dialog-close>close</button>
@@ -281,7 +292,7 @@
         <p class="dialog__text">Your tasks, your pomodoro log, the timer state and your settings are saved in this browser's localStorage, on this device. They are not synced anywhere and nobody else can read them.</p>
 
         <h3 class="dialog__heading">What the Page Requests</h3>
-        <p class="dialog__text">Two things. The app files, from wherever it is hosted. And the Space Mono typeface from Google Fonts, which means Google sees your IP address when the page loads. Nothing else goes out.</p>
+        <p class="dialog__text">The app's own files, from wherever it is hosted. Nothing else is requested, and nothing about you is sent.</p>
 
         <h3 class="dialog__heading">Deleting It</h3>
         <p class="dialog__text">Reset everything under //danger zone wipes all of it at once. Clearing your browser data does the same.</p>
@@ -294,9 +305,19 @@
         </div>
     </dialog>
 
+    <dialog class="dialog" id="import-dialog" aria-labelledby="import-dialog-title">
+        <h2 class="dialog__title" id="import-dialog-title">//import a backup</h2>
+        <p class="dialog__hint">this replaces every task, pomodoro, column and setting in this browser with the ones in the file. it cannot be undone.</p>
+        <p class="dialog__task" id="import-dialog-summary"></p>
+        <div class="dialog__actions">
+            <button type="button" class="btn" id="import-dialog-keep">keep my data</button>
+            <button type="button" class="btn btn--outline-danger" id="import-dialog-confirm">replace everything</button>
+        </div>
+    </dialog>
+
     <dialog class="dialog" id="reset-dialog" aria-labelledby="reset-dialog-title">
         <h2 class="dialog__title" id="reset-dialog-title">//reset everything</h2>
-        <p class="dialog__hint">this deletes every task, pomodoro and setting stored in this browser. it cannot be undone.</p>
+        <p class="dialog__hint">this deletes every task, pomodoro, column and setting stored in this browser. it cannot be undone.</p>
         <div class="dialog__actions">
             <button type="button" class="btn" id="reset-dialog-keep">keep my data</button>
             <button type="button" class="btn btn--outline-danger" id="reset-dialog-confirm">reset everything</button>

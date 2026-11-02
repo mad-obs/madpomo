@@ -210,11 +210,20 @@ MP.timer = (function () {
   }
 
   /* Measured against the wall clock, not counted in ticks: a background tab
-     gets throttled, and a tick-counting timer would drift behind. */
+     gets throttled, and a tick-counting timer would drift behind.
+
+     Only whole seconds are taken, and the remainder is carried rather than
+     thrown away by resetting to `now`. Both halves matter. Flooring the
+     elapsed time at one second used to make a throttled tab race: coming
+     back to it fires the queued ticks back to back, and each one charged a
+     full second even though microseconds had passed. Resetting to `now`
+     dropped the leftover milliseconds on every tick, which is the opposite
+     error, a clock running slightly slow. */
   function tick() {
     const now = Date.now();
-    const elapsed = Math.max(1, Math.round((now - lastTickAt) / 1000));
-    lastTickAt = now;
+    const elapsed = Math.floor((now - lastTickAt) / 1000);
+    if (elapsed < 1) return;
+    lastTickAt = lastTickAt + elapsed * 1000;
     state.timeLeft = state.timeLeft - elapsed;
 
     if (state.timeLeft <= 0) {

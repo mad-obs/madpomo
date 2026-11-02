@@ -81,7 +81,12 @@ export default function TaskCard({ task, isCurrent, onCancel, onDelete, onMouseD
 
   return (
     <div
-      className={"task" + (isCurrent ? " task--current" : "") + (dragging ? " task--dragging" : "")}
+      className={
+        "task" +
+        (task.expanded ? " task--open" : "") +
+        (isCurrent ? " task--current" : "") +
+        (dragging ? " task--dragging" : "")
+      }
       data-id={task.id}
       onMouseDown={onMouseDown}
     >

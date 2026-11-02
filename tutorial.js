@@ -42,12 +42,12 @@
     },
     {
       title: "the board",
-      body: "Four columns: to do, in progress, completed, cancelled. A task moves between them when you press a button on its card, or when you drag it there yourself. The number beside each column name counts what is in it right now.",
+      body: "Four columns to start with: to do, in progress, completed, cancelled. +column adds your own next to them. A task moves between columns when you press a button on its card, or when you drag it there yourself, and the number beside each name counts what is in it right now.",
       target: ".board"
     },
     {
       title: "adding a task",
-      body: "The + button on a column adds a task straight into it. Type a title and press Enter to keep it, Escape to throw it away. To do and in progress can both take new tasks.",
+      body: "The + button on a column adds a task straight into it. Type a title and press Enter to keep it, Escape to throw it away. Every column except completed and cancelled has one.",
       target: "#add-todo-btn"
     },
     {
@@ -70,7 +70,7 @@
     },
     {
       title: "focus starts the clock",
-      body: "Focus is the button that begins a pomodoro for that task. It moves the task to in progress, names it as the current task in the sidebar, and starts a 25-minute countdown.",
+      body: "Focus is the button that begins a pomodoro for that task. It moves the task to in progress, names it as the current task in the sidebar, and starts the countdown at whatever focus length you have set.",
       target: '.task__footer [data-action="focus"]',
       before: expandFirstCard
     },
@@ -81,7 +81,7 @@
     },
     {
       title: "cycles of four",
-      body: "Pomodoros come in cycles. #1 of 4 is the one you are attempting now. After the fourth, the break is a long one — fifteen minutes instead of five — and then the count starts again.",
+      body: "Pomodoros come in cycles. #1 of 4 is the one you are attempting now. The last one in a cycle earns a long break instead of a short one, and then the count starts again. Both lengths, and how many pomodoros make a cycle, are in settings.",
       target: "#phase-label"
     },
     {
@@ -117,12 +117,12 @@
     },
     {
       title: "settings",
-      body: "Settings holds the timer lengths, cycle length, auto-start, the end-of-session sound, desktop notifications, a full JSON export of your data — and this tutorial, if you ever want it again.",
+      body: "Settings holds the timer lengths, cycle length, auto-start, the end-of-session sound, desktop notifications, export and import of your data, and this tutorial if you ever want it again.",
       target: ".header__nav"
     },
     {
       title: "your data stays here",
-      body: "There is no account and no server. Everything you type lives in this browser only, which also means clearing your browser data clears madpomo. The export button in settings is your backup. That is the whole app — go start a pomodoro."
+      body: "There is no account and no server. Everything you type lives in this browser only, which also means clearing your browser data clears madpomo. Export in settings writes a copy you can keep, and import reads it back. That is the whole app — go start a pomodoro."
     }
   ];
 
