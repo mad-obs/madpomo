@@ -75,6 +75,24 @@ export function formatClock(seconds) {
   return pad2(Math.floor(safe / 60)) + ":" + pad2(safe % 60);
 }
 
+/* The phase heading over the clock: "//focus | #2 of 4", "//break" or
+   "//long break". Lives here rather than in the sidebar because the mobile
+   timer bar shows the same thing, and two copies of it would eventually
+   disagree about what a long break is called. */
+export function phaseLabel(timer, settings) {
+  if (timer.phase === "focus") {
+    return "//focus | #" + timer.cycle + " of " + settings.cycleLength;
+  }
+  return timer.cycle >= settings.cycleLength ? "//long break" : "//break";
+}
+
+/* What the one primary timer button says. "resume" during a break, because
+   pressing it goes back to work rather than restarting the break. */
+export function startLabel(timer) {
+  if (timer.phase === "break") return "resume";
+  return timer.isRunning ? "pause" : "start";
+}
+
 /* --------------------------------------------------------------------------
    Ranges
    -------------------------------------------------------------------------- */

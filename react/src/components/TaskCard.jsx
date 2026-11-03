@@ -26,7 +26,7 @@ function dueDateInputValue(task) {
   );
 }
 
-export default function TaskCard({ task, isCurrent, onCancel, onDelete, onMouseDown, dragging }) {
+export default function TaskCard({ task, isCurrent, onCancel, onDelete, onPointerDown, dragging }) {
   const { settings, updateTask, setTaskStatus, focusTask, columns } = useMadpomo();
   const [editing, setEditing] = useState(null); // "title" | "notes" | "due" | number (subtask index)
   const [draft, setDraft] = useState("");
@@ -88,7 +88,7 @@ export default function TaskCard({ task, isCurrent, onCancel, onDelete, onMouseD
         (dragging ? " task--dragging" : "")
       }
       data-id={task.id}
-      onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown}
     >
       <div className="task__head">
         {editing === "title" ? (
@@ -109,6 +109,10 @@ export default function TaskCard({ task, isCurrent, onCancel, onDelete, onMouseD
             {task.title}
           </span>
         )}
+
+        {/* phone only: the one spot on the card whose drags move it instead
+            of scrolling the column (mobile.css) */}
+        <span className="task__grip" data-grip aria-hidden="true">::</span>
 
         {task.expanded ? (
           <div className="task__actions">
@@ -216,6 +220,31 @@ export default function TaskCard({ task, isCurrent, onCancel, onDelete, onMouseD
               {task.cyclesUsed} pomodoro{task.cyclesUsed === 1 ? "" : "s"} done
             </p>
           ) : null}
+
+          {/* Phone only. A column you have to swipe to cannot be dragged
+              onto, so moving a card across the board is a tap on the column
+              you want. Cancelling still goes through its dialog, because the
+              report wants a reason for it. */}
+          <div className="task__move">
+            <p className="task__move-label">move to</p>
+            <div className="task__move-chips">
+              {columns
+                .filter((column) => column.id !== task.status)
+                .map((column) => (
+                  <button
+                    key={column.id}
+                    type="button"
+                    className="btn task__move-chip"
+                    onClick={() => {
+                      if (column.id === "cancelled") onCancel(task);
+                      else setTaskStatus(task.id, column.id);
+                    }}
+                  >
+                    {column.name}
+                  </button>
+                ))}
+            </div>
+          </div>
 
           <div className="task__footer">
             {done ? (

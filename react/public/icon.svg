@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  madpomo app icon — the prompt from the header, `>_`, on the chrome black.
+
+  Drawn rather than set in Space Mono so the icon needs no font, and squared
+  off at every join because the whole design system is radius-none.
+
+  The glyph sits inside a circle of radius 204 around the centre, which is
+  Android's maskable safe zone, so one file works as both `any` and
+  `maskable` and a round launcher crops nothing off.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#0a0a0a"/>
+  <polyline points="164,170 239,256 164,342"
+            fill="none" stroke="#ffa600" stroke-width="28"
+            stroke-linecap="square" stroke-linejoin="miter"/>
+  <rect x="252" y="318" width="112" height="26" fill="#ffa600"/>
+</svg>

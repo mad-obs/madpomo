@@ -2,10 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit=cover lets the page draw under the notch and the home
+         indicator, which is the only reason env(safe-area-inset-*) in
+         mobile.css reports anything but 0. interactive-widget tells Android
+         Chrome to shrink the layout when the keyboard opens, so the two
+         bottom bars ride up with it the way they already do on iOS. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <!-- the colour at the very top of the page, so the status bar matches the
+         header rather than the brand. One value, because the app is dark. -->
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="dark">
+    <!-- installed to a home screen: no browser chrome, and a status bar drawn
+         over the app instead of sitting in a strip of its own -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="madpomo">
     <title>madpomo</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
     <div class="app">
@@ -38,7 +56,13 @@
             </span>
         </nav>
         </header>
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <!-- The handle of the bottom sheet, on a phone. Hidden above
+                 720px, where the sidebar is just a column of the grid. -->
+            <div class="sheet__head">
+                <span class="sheet__grip" aria-hidden="true"></span>
+                <button type="button" class="btn btn--icon sheet__close" id="sheet-close" aria-label="close the timer panel">x</button>
+            </div>
             <div class="sidebar__section timer">
                 <div>
                     <h2 class="sidebar__title" id="phase-label">//focus | #1 of 4</h2>
@@ -157,6 +181,35 @@
             </div>
         </main>
     </div>
+
+    <!-- ======================================================================
+         Mobile shell. All of it is display:none above 720px (mobile.css), so
+         the desktop page is the same page it was.
+
+         The timer bar is a mini player: it mirrors the sidebar's clock and
+         its start button, and tapping it pulls the sidebar up as a sheet.
+         The tab bar carries the links the header gives up on a phone.
+         ====================================================================== -->
+    <div class="sheet-scrim" id="sheet-scrim" hidden></div>
+
+    <div class="nowbar" id="nowbar">
+        <button type="button" class="nowbar__open" id="nowbar-open" aria-expanded="false" aria-controls="sidebar" aria-label="open the timer panel">
+            <span class="nowbar__clock" id="nowbar-clock">25:00</span>
+            <span class="nowbar__meta">
+                <span class="nowbar__phase" id="nowbar-phase"></span>
+                <span class="nowbar__task" id="nowbar-task"></span>
+            </span>
+        </button>
+        <button type="button" class="btn btn--primary nowbar__action" id="nowbar-start">start</button>
+    </div>
+
+    <nav class="tabbar" aria-label="sections">
+            <a href="index.html" class="tabbar__item"><span class="tabbar__glyph" aria-hidden="true">[#]</span>board</a>
+            <a href="report.html" class="tabbar__item" aria-current="page"><span class="tabbar__glyph" aria-hidden="true">[~]</span>report</a>
+            <a href="settings.html" class="tabbar__item"><span class="tabbar__glyph" aria-hidden="true">[=]</span>settings</a>
+            <a href="about.html" class="tabbar__item"><span class="tabbar__glyph" aria-hidden="true">[?]</span>about</a>
+    </nav>
+
     <script src="storage.js"></script>
     <script src="stats.js"></script>
     <script src="timer.js"></script>
@@ -165,5 +218,6 @@
     <script src="report.js"></script>
     <script src="i18n-data.js"></script>
     <script src="i18n.js"></script>
+    <script src="mobile.js"></script>
 </body>
 </html>

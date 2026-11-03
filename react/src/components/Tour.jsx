@@ -100,7 +100,9 @@ const STEPS = [
   {
     title: "settings",
     body: "Settings holds the timer lengths, cycle length, auto-start, the end-of-session sound, desktop notifications, export and import of your data, and this tutorial if you ever want it again.",
-    target: ".header__nav"
+    target: ".header__nav",
+    // on a phone those links are in the tab bar at the bottom instead
+    mobileTarget: ".tabbar"
   },
   {
     title: "your data stays here",
@@ -108,7 +110,28 @@ const STEPS = [
   }
 ];
 
-export default function Tour({ params }) {
+/* --------------------------------------------------------------------------
+   The tour on a phone
+
+   Four of the steps point at the timer, the clock or the 7-day history — all
+   of which live in the sidebar, and the sidebar on a phone is a bottom sheet
+   that is closed until something opens it. So the tour opens it for those
+   steps and closes it again for the rest, and `tour-running` on the body lets
+   mobile.css drop the sheet under the dimming mask while this is going on, so
+   the spotlight still means something inside it.
+   -------------------------------------------------------------------------- */
+
+const PHONE = "(max-width: 720px)";
+
+// the sheet's transition in mobile.css, plus a frame
+const SHEET_MS = 260;
+
+function targetFor(step) {
+  const phone = window.matchMedia(PHONE).matches;
+  return phone && step.mobileTarget ? step.mobileTarget : step.target;
+}
+
+export default function Tour({ params, onSheetChange }) {
   const { tasks, updateTask } = useMadpomo();
 
   const [running, setRunning] = useState(false);
@@ -195,21 +218,53 @@ export default function Tour({ params }) {
     clearHighlight();
     lastHoleRef.current = "";
 
-    if (!step.target) return undefined;
+    const target = targetFor(step);
+    if (!target) {
+      if (onSheetChange) onSheetChange(false);
+      return undefined;
+    }
 
     /* The card has to be open before the steps about its insides can point
        at anything, and opening it is a state change, so the element only
        exists on the next frame. */
+    let timer = null;
+
     const id = window.requestAnimationFrame(() => {
-      const element = document.querySelector(step.target);
+      const element = document.querySelector(target);
       if (!element) return;
+
+      // a step about the timer needs the sheet it lives in
+      const inSheet = element.closest(".sidebar") !== null;
+      if (onSheetChange) onSheetChange(inSheet);
+
       element.classList.add("tour-highlight");
       highlightRef.current = element;
-      element.scrollIntoView({ block: "center", behavior: "smooth" });
+
+      const reveal = () => element.scrollIntoView({ block: "center", behavior: "smooth" });
+
+      /* The sheet takes 240ms to come up. Scrolling to something inside it
+         before it arrives scrolls to where it is not. */
+      if (inSheet) timer = window.setTimeout(reveal, SHEET_MS);
+      else reveal();
     });
 
-    return () => window.cancelAnimationFrame(id);
-  }, [running, index, step, tasks]);
+    return () => {
+      window.cancelAnimationFrame(id);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, [running, index, step, tasks, onSheetChange]);
+
+  /* While the tour runs the sheet goes under the dimming mask (mobile.css),
+     so a highlight inside it is still the only bright thing on the screen. */
+  useEffect(() => {
+    document.body.classList.toggle("tour-running", running);
+    return () => document.body.classList.remove("tour-running");
+  }, [running]);
+
+  useEffect(() => {
+    if (running || !onSheetChange) return;
+    onSheetChange(false);
+  }, [running, onSheetChange]);
 
   /* Opening the first card for the steps that describe one. */
   useEffect(() => {

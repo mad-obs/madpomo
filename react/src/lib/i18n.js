@@ -79,12 +79,19 @@ function lookup(text) {
   return rewritten === key ? null : rewritten;
 }
 
-/* A built-in column is named by the app; one you added is named by you. */
-function columnNameFor(node) {
-  const title = node.parentElement;
-  if (!title || !title.classList.contains("column__title")) return null;
+/* A built-in column is named by the app; one you added is named by you.
 
-  const column = title.closest("[data-status]");
+   Two places print that name: the heading on the board, and — on a phone —
+   the column's chip in the pager. In both the name is a bare text node and
+   the "(3)" beside it is a child span, so checking the direct parent keeps
+   the count out of it. */
+function columnNameFor(node) {
+  const holder = node.parentElement;
+  if (!holder) return null;
+  if (!holder.classList.contains("column__title") &&
+      !holder.classList.contains("pager__chip")) return null;
+
+  const column = holder.closest("[data-status]");
   if (!column) return null;
 
   return BUILT_IN_COLUMNS[column.dataset.status] || null;

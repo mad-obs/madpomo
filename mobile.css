@@ -1,0 +1,812 @@
+/* ==========================================================================
+   Madpomo — mobile. Loaded after style.css, on every page.
+
+   The desktop app is a three-pane grid: header, a tall sidebar holding the
+   timer, and the board. None of that survives a phone, so this file does not
+   shrink it — it rebuilds the same app with mobile furniture:
+
+     - a bottom tab bar instead of header links, in reach of a thumb
+     - a timer bar above it, always showing the clock and start/pause
+     - the whole sidebar as a bottom sheet the timer bar pulls up, so the
+       timer, the noise, the counts and the 7-day history are one tap from
+       every screen instead of a wall of text above the board
+     - the board as a swipeable row of full-width columns with a chip pager,
+       instead of a 340px column scrolled sideways
+     - confirmations as bottom sheets, not centred boxes
+     - a drag grip and a "move to" row on each card, because a column you
+       have to swipe to cannot be dragged onto
+
+   Structure:
+     1. Touch platform    — capability-gated, every width (hover, zoom, sizes)
+     2. Phone shell       — <=720px: grid, header, tab bar, timer bar, sheet
+     3. Phone board       — toolbar, pager, snap columns, cards
+     4. Phone dialogs     — confirmations and the tour as bottom sheets
+     5. Phone pages       — report, settings, about
+     6. Landscape         — short viewports
+
+   Everything new here is hidden by default and switched on inside the
+   breakpoint, so the desktop layout is untouched by loading this file.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Touch platform — gated on what the input device can do, not on width.
+      A touchscreen laptop and a tablet with a trackpad both exist; capability
+      queries get them right where a width breakpoint guesses.
+   -------------------------------------------------------------------------- */
+
+/* Sticky hover. Touch has no hover, so browsers fake one: the first tap
+   applies :hover and leaves it there until something else is tapped. Every
+   hover rule in style.css is restated here back to its resting value for
+   devices that cannot really hover. :active (style.css) answers the press
+   instead, and it works on every input type. */
+@media (hover: none) {
+  .btn:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+  }
+
+  .btn--primary:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+
+  .btn--outline-danger:hover {
+    background: transparent;
+    border-color: var(--color-feedback-danger);
+    color: var(--color-feedback-danger);
+  }
+
+  .noise__type[aria-pressed="true"]:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+
+  .header__link:hover {
+    color: var(--color-text-primary);
+  }
+
+  .lang__btn:hover {
+    opacity: 0.4;
+  }
+
+  .lang__btn[aria-pressed="true"]:hover {
+    opacity: 1;
+  }
+
+  .task:hover {
+    background: var(--color-surface-card);
+  }
+
+  .checklist__item--ghost:hover {
+    opacity: 0.5;
+  }
+
+  .link:hover .link__arrow {
+    transform: none;
+  }
+
+  /* Hover is how a desktop reveals the subtask delete. With no hover there
+     is no reveal, so it is simply always there. */
+  .subtask__delete {
+    opacity: 1;
+  }
+}
+
+/* iOS Safari zooms the page when focus lands on an input smaller than 16px,
+   and does not zoom back out on blur. The fix is the font size, never
+   user-scalable=no — that one takes zoom away from everyone who needs it.
+   The named inputs are the ones style.css sets below 16px or leaves on the
+   14px body size. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select,
+  .search__input,
+  .task__head-input,
+  .task__notes-input,
+  .task__due-input,
+  .column__name-input,
+  .dialog__input {
+    font-size: 16px;
+  }
+
+  /* A finger is about 9mm across; 40px is a mouse target. These two tokens
+     feed every button, icon button and stepper in the app, so raising them
+     here raises all of them at once. */
+  :root {
+    --size-control-height: 48px;
+    --size-icon-button: 40px;
+  }
+
+  /* style.css paints the scrollbar in the accent, which is right for a
+     desktop window and wrong for a phone: a touch scroller has no handle to
+     drag, and the accent belongs to the primary action. Phones overlay their
+     own thin indicator anyway. */
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The mobile furniture does not exist on a desktop. Declared off here and
+   switched on inside the breakpoint, so this file adds nothing to the
+   desktop layout. */
+.tabbar,
+.nowbar,
+.pager,
+.sheet-scrim,
+.sheet__head,
+.task__grip,
+.task__move {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. Phone shell — <=720px
+
+   720px rather than 900: 900 is the tablet layout in style.css, where the
+   sidebar still fits above the board. Below 720 it does not, and the app
+   switches to tab bar + sheet. The widest phone in portrait is about 430px
+   and the narrowest tablet 768, so nothing lands in between by accident.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  :root {
+    --size-nowbar: 52px;
+    --size-tabbar: 56px;
+    /* what the two fixed bars take off the bottom of the viewport, home
+       indicator included */
+    --size-mobile-chrome: calc(
+      var(--size-nowbar) + var(--size-tabbar) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  /* Two rows now: the sidebar has left the grid for the bottom sheet. The
+     padding is what keeps the board clear of the two fixed bars — the grid
+     sizes itself inside it, so nothing ends up underneath them. */
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "header"
+      "main";
+    height: 100dvh;
+    min-height: 0;
+    padding-bottom: var(--size-mobile-chrome);
+  }
+
+  /* The notch and the Dynamic Island sit over the top of the header. The page
+     is allowed under them (viewport-fit=cover in the HTML) and pads its own
+     content back out. */
+  .header {
+    min-height: calc(var(--size-header-height) + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
+  }
+
+  /* settings / about / the date move to the tab bar and the sheet. The
+     language switch stays, since it belongs to no section. */
+  .header__date,
+  .header__link,
+  .header__sep {
+    display: none;
+  }
+
+  /* ---- bottom tab bar ---------------------------------------------------
+     The ASCII glyphs are the same voice as `>_ madpomo` and the `[x]` in the
+     checklists: this app does not own an icon set, and borrowing one would
+     be the first thing on the screen that is not Space Mono.
+     --------------------------------------------------------------------- */
+
+  .tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1150;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: calc(var(--size-tabbar) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--color-surface-chrome);
+    border-top: var(--border-width-thin) solid var(--color-border);
+  }
+
+  .tabbar__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-caps);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .tabbar__glyph {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+  }
+
+  /* the page you are on is the active item, so it takes the accent */
+  .tabbar__item[aria-current="page"] {
+    color: var(--color-accent);
+  }
+
+  .tabbar__item:active {
+    background: var(--color-surface-raised);
+  }
+
+  /* ---- timer bar -------------------------------------------------------
+     A mini player for the pomodoro: the clock and one button on every
+     screen, and the tap target that pulls the sheet up.
+     --------------------------------------------------------------------- */
+
+  .nowbar {
+    position: fixed;
+    right: 0;
+    bottom: calc(var(--size-tabbar) + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    z-index: 1150;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: var(--size-nowbar);
+    padding: 0 var(--space-4);
+    background: var(--color-surface-card);
+    border-top: var(--border-width-thin) solid var(--color-border);
+  }
+
+  .nowbar__open {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    text-align: left;
+  }
+
+  .nowbar__clock {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-timer);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* a running clock is the one active thing in the app */
+  .nowbar--running .nowbar__clock {
+    color: var(--color-accent);
+  }
+
+  .nowbar__meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: var(--line-height-tight);
+  }
+
+  .nowbar__phase,
+  .nowbar__task {
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nowbar__action {
+    flex: 0 0 auto;
+    min-width: calc(var(--space-10) * 2);
+  }
+
+  /* ---- the sidebar, as a bottom sheet ----------------------------------
+     Same markup, same sections, same order. It is off-screen until the
+     timer bar is tapped, and visibility is animated with the transform so a
+     closed sheet is not a focus trap sitting under the board.
+     --------------------------------------------------------------------- */
+
+  .sidebar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1200;
+    max-height: 88dvh;
+    padding: 0 var(--space-5)
+      calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    border-right: 0;
+    border-top: var(--border-width-thick) solid var(--color-accent);
+    /* the sheet keeps its own bounce and stops the board behind it moving */
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 240ms var(--easing-standard), visibility 240ms;
+  }
+
+  body.sheet-open .sidebar {
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .sheet-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1190;
+    display: block;
+    background: var(--color-overlay);
+  }
+
+  .sheet-scrim[hidden] {
+    display: none;
+  }
+
+  /* Sticky, so the way out of the sheet does not scroll away. touch-action is
+     none because this strip owns the drag-down-to-dismiss gesture; the rest
+     of the sheet scrolls normally. */
+  .sheet__head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 calc(-1 * var(--space-5));
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-surface-chrome);
+    touch-action: none;
+  }
+
+  .sheet__grip {
+    width: var(--space-10);
+    height: var(--border-width-thick);
+    background: var(--color-border-strong);
+  }
+
+  .sheet__close {
+    position: absolute;
+    right: var(--space-4);
+  }
+
+  /* the first section sits right under the sticky head, which already
+     carries the gap */
+  .sidebar > .sidebar__section:first-of-type {
+    padding-top: 0;
+  }
+
+  /* The clock and its three buttons stop competing for one row: the clock
+     gets the width, the buttons share a row of their own. */
+  .timer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .timer__actions {
+    flex-direction: row;
+    width: auto;
+  }
+
+  .timer__actions li {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Phone board — <=720px
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  /* Title on one line, then search and +column on the next. A 32px title and
+     a 275px search cannot share a 360px row. */
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    height: auto;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .toolbar__title {
+    font-size: var(--font-size-lg);
+  }
+
+  .toolbar__actions {
+    gap: var(--space-2);
+  }
+
+  .search {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  /* ---- column pager ----------------------------------------------------
+     A full-width column hides the other five. The chips say which columns
+     exist, how full each one is, and which one you are looking at — and one
+     tap beats five swipes to reach completed.
+     --------------------------------------------------------------------- */
+
+  .pager {
+    display: flex;
+    flex: 0 0 auto;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-chrome);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .pager::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pager__chip {
+    flex: 0 0 auto;
+    min-height: var(--size-icon-button);
+    padding: 0 var(--space-3);
+    background: var(--color-surface-card);
+    border: var(--border-width-thin) solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-caps);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .pager__chip[aria-current="true"] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+
+  .pager__count {
+    font-weight: var(--font-weight-regular);
+  }
+
+  /* ---- the board as a carousel ----------------------------------------
+     Native scroll snapping rather than a JavaScript swipe: the browser has
+     better physics than anything hand-rolled, and it keeps working with a
+     keyboard and a mouse wheel.
+     --------------------------------------------------------------------- */
+
+  .board {
+    padding: 0;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    /* The pager is the position indicator. A scrollbar under the cards would
+       be a second one, and on a swipe surface nobody drags it anyway. */
+    scrollbar-width: none;
+  }
+
+  .board::-webkit-scrollbar {
+    display: none;
+  }
+
+  .column {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    padding: 0 var(--space-4) var(--space-6);
+    overscroll-behavior-y: contain;
+  }
+
+  /* the pager separates the columns now; a dashed edge mid-swipe only reads
+     as a glitch */
+  .column + .column {
+    border-left: 0;
+  }
+
+  /* The chip in the pager is the column's heading now — it carries the same
+     name and the same count, in the accent, and it is the thing that says
+     which column you are looking at. Printing the name again directly under
+     it is the same words twice. What is left in the head is the + and x,
+     which stay put while the cards scroll under them. */
+  .column__head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    justify-content: flex-end;
+    padding-top: var(--space-3);
+    background: var(--color-surface-board);
+  }
+
+  /* Hidden from the eye, not from a screen reader: `display: none` would
+     take the column's only name out of the accessibility tree, and the chip
+     in the pager is a button elsewhere in the document, not this region's
+     label. */
+  .column__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ---- cards ----------------------------------------------------------- */
+
+  .task__head {
+    gap: var(--space-2);
+  }
+
+  /* Pointer-drag handle. touch-action none hands this 40px square to the
+     card, so a drag from here moves the card instead of scrolling the
+     column — and a drag anywhere else on the card still scrolls it. */
+  .task__grip {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-icon-button);
+    height: var(--size-icon-button);
+    margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2))
+      calc(-1 * var(--space-2)) 0;
+    color: var(--color-text-disabled);
+    font-size: var(--font-size-sm);
+    line-height: 1;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  /* Dragging a card onto a column you have to swipe to is not a gesture that
+     exists. This is the way across: tap the column you want. */
+  .task__move {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .task__move-label {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+  }
+
+  /* One row that scrolls, not a block that wraps: six columns would wrap to
+     three rows and push the card's own buttons off the screen. */
+  .task__move-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .task__move-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .task__move-chip {
+    flex: 0 0 auto;
+    min-height: var(--size-icon-button);
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+
+  /* 240px of empty textarea pushes the buttons off a phone screen */
+  .task__notes-input {
+    min-height: calc(var(--space-10) * 4);
+    max-height: calc(var(--space-10) * 4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Phone dialogs — <=720px
+
+   A centred box is a desktop shape. On a phone a confirmation comes up from
+   the bottom edge, full width, with its buttons where the thumb already is.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .dialog {
+    position: fixed;
+    /* The UA stylesheet gives a modal <dialog> `top: 0` along with `margin:
+       auto` to centre it. Setting bottom alone leaves top at 0, and a box
+       with both set and no height resolves to the top of the screen — which
+       is exactly where it is not wanted. `top: auto` is what releases it. */
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+    max-height: 88dvh;
+    margin: 0;
+    padding: var(--space-5) var(--space-5)
+      calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    border-left: 0;
+    border-top: var(--border-width-thick) solid var(--color-accent);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dialog[open] {
+    animation: sheet-up 240ms var(--easing-standard);
+  }
+
+  .dialog--doc {
+    width: auto;
+    max-height: 88dvh;
+  }
+
+  /* Reversed. Every one of these dialogs is written with the safe button
+     first and the committing one second, so reversing puts the safe one at
+     the bottom, nearest the thumb, and the red one above it where it takes a
+     deliberate reach. A destructive action should not be the easiest thing
+     on the screen to hit. */
+  .dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog__actions .btn {
+    width: 100%;
+  }
+
+  /* clear of the timer bar and the tab bar */
+  .tour {
+    right: var(--space-4);
+    bottom: calc(var(--size-mobile-chrome) + var(--space-4));
+    left: var(--space-4);
+    width: auto;
+  }
+
+  /* Four tour steps are about the timer, which on a phone is inside the
+     sheet. The sheet normally sits above the dimming mask, which would leave
+     everything in it at full brightness and the spotlight pointing at
+     nothing in particular. While the tour runs it goes under the mask
+     instead, so the hole cut over the highlighted control is the only bright
+     thing on the screen — the same as every other step. */
+  body.tour-running .sidebar {
+    z-index: 1040;
+  }
+
+  body.tour-running .sheet-scrim {
+    z-index: 1030;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Phone pages — report, settings, about, <=720px
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  .content {
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  /* four KPIs in a row of 360px are four columns of 70px */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .kpi {
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .report-grid,
+  .settings-grid {
+    flex-direction: column;
+  }
+
+  .report-grid__right {
+    width: 100%;
+  }
+
+  /* //tasks x pomodoros is four fixed columns adding up to 510px, which is
+     120px more than the phone has. It becomes two lines instead:
+
+       TASK NAME
+       [dots]              8/16   0
+
+     The name gets a line of its own, the head wraps the same way so DONE and
+     PAUSES still sit above their numbers, and the dots wrap rather than clip
+     — a session that scrolled out of sight is a session the report did not
+     report. The bar goes entirely: the number beside it already says what
+     the bar says. */
+  .task-table__col--bar,
+  .task-table__row .bar {
+    display: none;
+  }
+
+  .task-table__head,
+  .task-table__row {
+    flex-wrap: wrap;
+    /* the name and the dots each take a whole line, so this only ever acts
+       on the last one — the two numbers, pushed right under their labels */
+    justify-content: flex-end;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .task-table__col--name,
+  .task-table__name,
+  .task-table__col--dots,
+  .dots {
+    flex: 1 0 100%;
+    width: auto;
+    min-width: 0;
+  }
+
+  .dots {
+    flex-wrap: wrap;
+  }
+
+  .task-table__col--num,
+  .task-table__num {
+    width: calc(var(--space-10) + var(--space-5));
+    text-align: right;
+  }
+
+  /* three labels and three swatches do not fit one 360px line */
+  .dots-legend {
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .settings-note {
+    align-self: flex-start;
+  }
+
+  .hero-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .avatar {
+    width: calc(var(--space-10) * 2);
+    height: calc(var(--space-10) * 2);
+    font-size: var(--font-size-lg);
+  }
+
+  .item,
+  .setting {
+    gap: var(--space-3);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Landscape — a phone on its side has about 350px of height, and the two
+      fixed bars plus the header already take 150 of it.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 920px) and (max-height: 480px) and (orientation: landscape) {
+  .sidebar {
+    max-height: 96dvh;
+  }
+
+  .timer__clock {
+    font-size: var(--font-size-xl);
+  }
+
+  .toolbar {
+    padding: var(--space-2) var(--space-4);
+  }
+}

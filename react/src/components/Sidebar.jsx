@@ -1,26 +1,69 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMadpomo } from "../store.jsx";
 import Noise from "./Noise.jsx";
-import { formatClock, pomodorosPerDay, taskOverview } from "../lib/stats.js";
+import { formatClock, phaseLabel, pomodorosPerDay, startLabel, taskOverview } from "../lib/stats.js";
 
 const MAX_CELLS = 24;
 
-export default function Sidebar({ route }) {
+/* How far the sheet has to travel, as a share of its own height, before
+   letting go dismisses it instead of snapping it back. */
+const DISMISS_RATIO = 3;
+
+export default function Sidebar({ route, onCloseSheet }) {
   const { settings, tasks, sessions, timer, startOrPause, takeBreak, reset } = useMadpomo();
 
   const counts = taskOverview(tasks, settings);
   const days = pomodorosPerDay(sessions, 7);
   const currentTask = tasks.find((task) => task.id === timer.taskId);
-  const longBreak = timer.cycle >= settings.cycleLength;
 
-  const phaseLabel =
-    timer.phase === "focus"
-      ? "//focus | #" + timer.cycle + " of " + settings.cycleLength
-      : longBreak
-        ? "//long break"
-        : "//break";
+  /* ---- drag the handle down to dismiss -------------------------------
+     On a phone this aside is a bottom sheet (mobile.css). It follows the
+     finger one-to-one while it moves, because a panel that waits for the
+     gesture to end before it reacts does not read as a sheet. Only the
+     handle has `touch-action: none`, so the rest still scrolls.
+     --------------------------------------------------------------------- */
 
-  const startLabel = timer.phase === "break" ? "resume" : timer.isRunning ? "pause" : "start";
+  const sheetRef = useRef(null);
+  const dragRef = useRef(null);
+
+  function onHandleDown(event) {
+    const sheet = sheetRef.current;
+    if (!sheet || !document.body.classList.contains("sheet-open")) return;
+
+    /* The x button lives in this strip. Capturing the pointer for a drag
+       would redirect the click that follows to the strip instead of the
+       button, so the one control in here never starts one. */
+    if (event.target.closest("button")) return;
+
+    dragRef.current = { startY: event.clientY, startAt: Date.now(), delta: 0 };
+    sheet.style.transition = "none";
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onHandleMove(event) {
+    const drag = dragRef.current;
+    const sheet = sheetRef.current;
+    if (!drag || !sheet) return;
+
+    // up does nothing: the sheet is already as far up as it goes
+    drag.delta = Math.max(0, event.clientY - drag.startY);
+    sheet.style.transform = "translateY(" + drag.delta + "px)";
+  }
+
+  function onHandleUp() {
+    const drag = dragRef.current;
+    const sheet = sheetRef.current;
+    if (!drag || !sheet) return;
+
+    dragRef.current = null;
+    sheet.style.transition = "";
+    sheet.style.transform = "";
+
+    const far = drag.delta > sheet.offsetHeight / DISMISS_RATIO;
+    const flick = drag.delta > 40 && Date.now() - drag.startAt < 250;
+
+    if ((far || flick) && onCloseSheet) onCloseSheet();
+  }
 
   // The tab title carries the clock, so it is readable from another tab.
   useEffect(() => {
@@ -28,17 +71,37 @@ export default function Sidebar({ route }) {
   }, [timer.isRunning, timer.timeLeft]);
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" id="sidebar" ref={sheetRef}>
+      {/* the sheet's handle, on a phone. Hidden above 720px, where this is
+          just a column of the grid. */}
+      <div
+        className="sheet__head"
+        onPointerDown={onHandleDown}
+        onPointerMove={onHandleMove}
+        onPointerUp={onHandleUp}
+        onPointerCancel={onHandleUp}
+      >
+        <span className="sheet__grip" aria-hidden="true" />
+        <button
+          type="button"
+          className="btn btn--icon sheet__close"
+          aria-label="close the timer panel"
+          onClick={onCloseSheet}
+        >
+          x
+        </button>
+      </div>
+
       <div className="sidebar__section timer">
         <div>
-          <h2 className="sidebar__title">{phaseLabel}</h2>
+          <h2 className="sidebar__title">{phaseLabel(timer, settings)}</h2>
           <p className="sidebar__subtitle">current task: {currentTask ? currentTask.title : "none"}</p>
           <p className="timer__clock">{formatClock(timer.timeLeft)}</p>
         </div>
         <ul className="timer__actions">
           <li>
             <button type="button" className="btn btn--primary" onClick={startOrPause}>
-              {startLabel}
+              {startLabel(timer)}
             </button>
           </li>
           <li>

@@ -52,8 +52,15 @@ export default function BoardView() {
   );
 
   /* ---- drag and drop --------------------------------------------------
-     Mouse-tracked, like the plain-JS version: the card follows the pointer
+     Pointer-tracked, like the plain-JS version: the card follows the pointer
      and a placeholder shows the slot it would land in.
+
+     Pointer events cover a mouse, a finger and a pen in one code path, but
+     the two devices need different openings. A mouse can start a drag
+     anywhere on the card, five pixels of travel apart from a click. A finger
+     cannot — a drag that started anywhere would make the column unscrollable
+     — so touch drags start only on the grip, whose `touch-action: none`
+     (mobile.css) is what hands the gesture over.
      --------------------------------------------------------------------- */
 
   const dragRef = useRef(null);
@@ -62,8 +69,14 @@ export default function BoardView() {
   const [drop, setDrop] = useState(null);
   const [dragId, setDragId] = useState(null);
 
-  function onCardMouseDown(event, task) {
-    if (event.target.closest("button, input, textarea, .checklist__item, .task__notes, .task__due")) return;
+  function onCardPointerDown(event, task) {
+    if (!event.isPrimary) return;
+
+    const grip = event.target.closest("[data-grip]");
+    if (!grip && event.target.closest("button, input, textarea, .checklist__item, .task__notes, .task__due")) return;
+
+    // a finger on anything but the grip is a scroll, not a drag
+    if (event.pointerType !== "mouse" && !grip) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
     dragRef.current = {
@@ -73,7 +86,9 @@ export default function BoardView() {
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
       width: rect.width,
-      active: false
+      /* The grip exists to be dragged, so it skips the threshold: waiting
+         five pixels only makes the card feel late to a finger. */
+      active: grip !== null
     };
     dropRef.current = null;
     setDragId(task.id);
@@ -148,13 +163,74 @@ export default function BoardView() {
       document.body.style.userSelect = "";
     }
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [dragId, tasks, setTasks, setTaskStatus]);
+
+  /* ---- the column pager, on a phone -----------------------------------
+     mobile.css makes each column the full width of the screen and snaps the
+     board between them, which hides every column but one. The chips say
+     which columns exist, how full each one is, and which one is on screen —
+     and one tap beats five swipes to reach completed. Above 720px the whole
+     row is display:none and none of this is visible.
+     --------------------------------------------------------------------- */
+
+  const boardRef = useRef(null);
+  const [onScreenColumn, setOnScreenColumn] = useState(null);
+
+  /* Measured rather than worked out from an index: a column being named sits
+     in the row too, so the chips and the DOM do not always line up. */
+  function offsetWithin(board, column) {
+    return column.getBoundingClientRect().left - board.getBoundingClientRect().left + board.scrollLeft;
+  }
+
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return undefined;
+
+    function read() {
+      let nearest = null;
+      let shortest = Infinity;
+
+      board.querySelectorAll(".column[data-status]").forEach((column) => {
+        const distance = Math.abs(offsetWithin(board, column) - board.scrollLeft);
+        if (distance < shortest) {
+          shortest = distance;
+          nearest = column.dataset.status;
+        }
+      });
+
+      setOnScreenColumn(nearest);
+    }
+
+    /* Scroll fires many times a frame on a flick; one read per frame is
+       enough and leaves the main thread to the scroll itself. */
+    let queued = false;
+    function onScroll() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        read();
+      });
+    }
+
+    read();
+    board.addEventListener("scroll", onScroll, { passive: true });
+    return () => board.removeEventListener("scroll", onScroll);
+  }, [columns]);
+
+  function scrollToColumn(id) {
+    const board = boardRef.current;
+    const column = board && board.querySelector('.column[data-status="' + id + '"]');
+    if (column) board.scrollTo({ left: offsetWithin(board, column), behavior: "smooth" });
+  }
 
   /* ---- dialogs -------------------------------------------------------- */
 
@@ -253,7 +329,27 @@ export default function BoardView() {
         </div>
       </section>
 
-      <section className="board" aria-label="task board">
+      <nav className="pager" aria-label="columns">
+        {columns.map((column) => (
+          <button
+            key={column.id}
+            type="button"
+            className="pager__chip"
+            /* i18n.js reads this to translate the four built-in column
+               names; a column you named yourself is left alone. */
+            data-status={column.id}
+            aria-current={onScreenColumn === column.id ? "true" : undefined}
+            onClick={() => scrollToColumn(column.id)}
+          >
+            {column.name}{" "}
+            <span className="pager__count">
+              ({visible.filter((task) => task.status === column.id).length})
+            </span>
+          </button>
+        ))}
+      </nav>
+
+      <section className="board" aria-label="task board" ref={boardRef}>
         {columns.map((column, index) => {
           const cards = visible.filter((task) => task.status === column.id);
           const showPlaceholderAtEnd = drop && drop.status === column.id && drop.beforeId === null;
@@ -358,7 +454,7 @@ export default function BoardView() {
                     task={task}
                     isCurrent={timer.taskId === task.id}
                     dragging={dragId === task.id && dragBox !== null}
-                    onMouseDown={(event) => onCardMouseDown(event, task)}
+                    onPointerDown={(event) => onCardPointerDown(event, task)}
                     onCancel={openCancel}
                     onDelete={setDeleteFor}
                   />

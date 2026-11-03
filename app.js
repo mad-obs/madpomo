@@ -139,6 +139,27 @@
       ? `<button type="button" class="btn btn--outline-danger" data-task-id="${task.id}" data-action="delete">delete</button>`
       : `<button type="button" class="btn btn--outline-danger" data-task-id="${task.id}" data-action="cancel">cancel</button>`;
 
+    /* Phone only (mobile.css hides it above 720px). A column you have to
+       swipe to cannot be dragged onto, so moving a card across the board is a
+       tap on the column you want. Cancelling still goes through its dialog,
+       since the report wants a reason. */
+    const moveHTML = MP.columns
+      .filter(function (column) { return column.id !== task.status; })
+      .map(function (column) {
+        return (
+          '<button type="button" class="btn task__move-chip" data-task-id="' + task.id +
+          '" data-action="move" data-status="' + esc(column.id) + '">' + esc(column.name) + "</button>"
+        );
+      })
+      .join("");
+
+    const moveSectionHTML = `
+      <div class="task__move">
+        <p class="task__move-label">move to</p>
+        <div class="task__move-chips">${moveHTML}</div>
+      </div>
+    `;
+
     const footerHTML = done
       ? `
         <div class="task__footer">
@@ -159,6 +180,9 @@
         <input type="checkbox" id="task-${task.id}-toggle" class="task__toggle" hidden data-task-id="${task.id}" ${expandedAttr}>
         <div class="task__head">
           <span class="task__head-label" data-task-id="${task.id}" data-action="edit-title">${esc(task.title)}</span>
+          <!-- phone only: the one spot on the card whose drags move it
+               instead of scrolling the column (mobile.css) -->
+          <span class="task__grip" data-grip aria-hidden="true">::</span>
           <div class="task__actions">
             <button type="button" class="btn btn--icon btn--minimize" data-task-id="${task.id}" data-action="collapse" aria-label="minimize task">_</button>
           </div>
@@ -174,6 +198,7 @@
               </li>
           </ul>
           ${cyclesHTML}
+          ${moveSectionHTML}
           ${footerHTML}
         </div>
       </div>
@@ -547,6 +572,19 @@
       return;
     }
 
+    if (action === "move") {
+      const task = findTask(taskId);
+      const status = event.target.dataset.status;
+
+      // the cancelled column is the one move that has to ask why
+      if (status === "cancelled") openCancelDialog(task);
+      else {
+        setStatus(task, status);
+        renderTasks();
+      }
+      return;
+    }
+
     if (action === "toggle-subtask") {
       const task = findTask(taskId);
       const index = Number(event.target.dataset.subtaskIndex);
@@ -734,9 +772,12 @@
       return;
     }
 
-    // Clicking the empty part of a card's head expands or collapses it.
+    /* Clicking the empty part of a card's head expands or collapses it. The
+       grip is not empty part: a drag that ends there also fires a click, and
+       a card that pops open every time it is moved reads as a bug. */
     if (event.target.closest(".task__head") &&
         !event.target.closest(".task__head-label") &&
+        !event.target.closest("[data-grip]") &&
         !event.target.closest(".task__actions")) {
       if (justSavedEdit) {
         justSavedEdit = false;
@@ -760,7 +801,18 @@
   });
 
   /* --------------------------------------------------------------------------
-     Drag and drop — mouse-tracked, not the native HTML5 API
+     Drag and drop — pointer-tracked, not the native HTML5 API
+
+     Pointer events cover a mouse, a finger and a pen in one code path, which
+     is why this is not `mousedown` any more. The two devices still need
+     different openings, though:
+
+       - a mouse can start a drag anywhere on the card, because moving a mouse
+         means moving a mouse. Five pixels of travel separate a drag from a
+         click.
+       - a finger cannot. A drag that started anywhere on the card would make
+         the column unscrollable, so touch drags start only on the grip, whose
+         `touch-action: none` (mobile.css) is what hands the gesture over.
      -------------------------------------------------------------------------- */
 
   const placeholder = document.createElement("div");
@@ -774,9 +826,18 @@
   let offsetY = 0;
   let isDraggingCard = false;
 
-  document.addEventListener("mousedown", function (event) {
+  let dragFromGrip = false;
+
+  document.addEventListener("pointerdown", function (event) {
+    if (!event.isPrimary) return;
+
+    const grip = event.target.closest("[data-grip]");
+
     // Controls inside a card must keep working, so they never start a drag.
-    if (event.target.closest("button, input, textarea, .checklist__item, .task__notes, .task__due")) return;
+    if (!grip && event.target.closest("button, input, textarea, .checklist__item, .task__notes, .task__due")) return;
+
+    // a finger on anything but the grip is a scroll, not a drag
+    if (event.pointerType !== "mouse" && !grip) return;
 
     const card = event.target.closest(".task");
     if (!card || !card.dataset.id) return;
@@ -784,17 +845,22 @@
     document.body.style.userSelect = "none";
     draggedElement = card;
     draggedTaskId = Number(card.dataset.id);
+    dragFromGrip = grip !== null;
     dragStartX = event.clientX;
     dragStartY = event.clientY;
   });
 
-  document.addEventListener("mousemove", function (event) {
+  document.addEventListener("pointermove", function (event) {
     if (draggedElement === null) return;
 
     if (!isDraggingCard) {
-      const deltaX = Math.abs(event.clientX - dragStartX);
-      const deltaY = Math.abs(event.clientY - dragStartY);
-      if (deltaX <= 5 && deltaY <= 5) return;
+      /* The grip exists to be dragged, so it needs no threshold: waiting
+         five pixels only makes the card feel late to a finger. */
+      if (!dragFromGrip) {
+        const deltaX = Math.abs(event.clientX - dragStartX);
+        const deltaY = Math.abs(event.clientY - dragStartY);
+        if (deltaX <= 5 && deltaY <= 5) return;
+      }
 
       isDraggingCard = true;
 
@@ -834,7 +900,7 @@
     else column.appendChild(placeholder);
   });
 
-  document.addEventListener("mouseup", function (event) {
+  document.addEventListener("pointerup", function (event) {
     if (draggedElement === null) return;
 
     if (isDraggingCard) {
@@ -863,6 +929,7 @@
 
     draggedElement = null;
     draggedTaskId = null;
+    dragFromGrip = false;
     isDraggingCard = false;
     document.body.style.userSelect = "";
   });

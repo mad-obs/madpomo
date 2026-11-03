@@ -13,6 +13,10 @@
      7. About Page Only       — about.html (avatar, hero, numbered items)
      8. Responsive            — small-screen layout changes (shell-level, shared)
 
+   The phone build lives in mobile.css, loaded after this file. It owns the
+   bottom tab bar, the timer bar, the sidebar-as-bottom-sheet, the swipeable
+   board and every touch-only fix. Nothing phone-shaped belongs here.
+
    A class only appears once, under the earliest section that still describes
    its actual scope. If a page uses a class from an earlier section, that's
    intentional reuse, not a missing definition — check Shared Components first.
@@ -74,6 +78,22 @@ html, body {
   height: 100%; margin: 0;
 }
 
+/* Platform baseline for touch. Four lines that decide whether the app reads
+   as installed or as a web page someone opened on a phone:
+     - tap-highlight: iOS and Android paint a grey box over anything tappable.
+       It is the loudest "this is a website" tell, so it goes and :active
+       below takes over the job of answering a finger.
+     - text-size-adjust: Safari inflates body text in landscape unless told
+       not to, which breaks the 4px spacing scale.
+     - overscroll-behavior: stops Android's pull-to-refresh and iOS's
+       whole-page rubber band. The app has its own scroll containers; the
+       page itself should never move. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--color-surface-board);
   color: var(--color-text-primary);
@@ -93,6 +113,29 @@ button, input {
 
 button {
   cursor: pointer;
+}
+
+/* A control is not content. `touch-action: manipulation` tells the browser
+   this element never double-tap-zooms, so the click fires on the tap instead
+   of 300ms later; `user-select: none` stops a long press from selecting a
+   button's own label, which no native control does. Body text, task titles
+   and notes stay selectable — people copy those. */
+button, a, [role="button"], summary, .segmented__item, .toggle,
+.checklist__item-box, .task__due, .task__head-label {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Every tappable thing answers the press itself, since the browser's grey
+   flash is gone. 120ms is the same beat as every other transition here. */
+.btn:active:not(:disabled) {
+  background: var(--color-surface-raised);
+}
+
+.btn--primary:active:not(:disabled) {
+  background: var(--color-accent-active);
 }
 
 /* The focus ring is drawn inside the element's own edge (negative offset),
@@ -118,7 +161,12 @@ button {
   grid-template-areas:
     "header header"
     "sidebar main";
+  /* dvh tracks the visible area as the browser's URL bar shows and hides.
+     100vh is the height *without* that bar, so on a phone it overflows by
+     the bar's height on load and pushes the bottom row off-screen. The vh
+     line is the fallback for browsers that do not know dvh. */
   height: 100vh;
+  height: 100dvh;
 }
 
 .header {

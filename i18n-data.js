@@ -56,6 +56,18 @@ window.MP_I18N = (function () {
     "about": "sobre",
     "<- back to board": "<- voltar ao quadro",
 
+    /* --- mobile shell: the tab bar, the timer bar, the sheet, the pager ---
+       "board" and "report" are the tab labels. They are short enough to
+       collide with ordinary prose, but nothing else in the app renders either
+       word alone, so the exact-match rule keeps them to the tab bar. */
+    "board": "quadro",
+    "report": "relatório",
+    "sections": "seções",
+    "columns": "colunas",
+    "open the timer panel": "abrir o painel do timer",
+    "close the timer panel": "fechar o painel do timer",
+    "move to": "mover para",
+
     /* --- timer --- */
     "//break": "//intervalo",
     "//long break": "//intervalo longo",

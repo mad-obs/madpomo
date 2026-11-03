@@ -118,7 +118,9 @@
     {
       title: "settings",
       body: "Settings holds the timer lengths, cycle length, auto-start, the end-of-session sound, desktop notifications, export and import of your data, and this tutorial if you ever want it again.",
-      target: ".header__nav"
+      target: ".header__nav",
+      // on a phone those links are in the tab bar at the bottom instead
+      mobileTarget: ".tabbar"
     },
     {
       title: "your data stays here",
@@ -128,6 +130,42 @@
 
   let index = 0;
   let highlighted = null;
+
+  /* --------------------------------------------------------------------------
+     The tour on a phone
+
+     Four of the steps point at the timer, the clock or the 7-day history —
+     all of which live in the sidebar, and the sidebar on a phone is a bottom
+     sheet that is closed until something opens it. So the tour opens it for
+     those steps and closes it again for the rest, and `tour-running` on the
+     body lets mobile.css drop the sheet under the dimming mask while this is
+     going on, so the spotlight still means something inside it.
+     -------------------------------------------------------------------------- */
+
+  const phone = window.matchMedia("(max-width: 720px)");
+
+  function targetFor(step) {
+    return phone.matches && step.mobileTarget ? step.mobileTarget : step.target;
+  }
+
+  /* Returns whether this step's element is inside the sheet, which the
+     caller needs: the sheet takes 240ms to come up, and scrolling to
+     something inside it before it arrives scrolls to where it is not. */
+  function syncSheet(target) {
+    if (!phone.matches) return false;
+
+    const el = target ? document.querySelector(target) : null;
+    const inSheet = el !== null && el.closest(".sidebar") !== null;
+    const scrim = document.getElementById("sheet-scrim");
+
+    document.body.classList.toggle("sheet-open", inSheet);
+    if (scrim) scrim.hidden = !inSheet;
+
+    return inSheet;
+  }
+
+  // the sheet's transition in mobile.css, plus a frame
+  const SHEET_MS = 260;
 
   function clearHighlight() {
     if (highlighted) highlighted.classList.remove("tour-highlight");
@@ -201,17 +239,27 @@
     backBtn.disabled = index === 0;
     nextBtn.textContent = index === steps.length - 1 ? "done" : "next";
 
-    if (step.target) {
-      const el = document.querySelector(step.target);
+    const target = targetFor(step);
+    const inSheet = syncSheet(target);
+
+    if (target) {
+      const el = document.querySelector(target);
       if (el) {
         el.classList.add("tour-highlight");
         highlighted = el;
-        el.scrollIntoView({ block: "center", behavior: "smooth" });
+
+        const reveal = function () {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+        };
+
+        if (inSheet) window.setTimeout(reveal, SHEET_MS);
+        else reveal();
       }
     }
   }
 
   function start() {
+    document.body.classList.add("tour-running");
     panel.hidden = false;
     mask.hidden = false;
     show(0);
@@ -235,6 +283,9 @@
     clearHighlight();
     stopMask();
     panel.hidden = true;
+
+    document.body.classList.remove("tour-running");
+    syncSheet(null);
     remember({ completed: completed });
 
     // Drop ?tour=1 so a reload does not start the tour over again.

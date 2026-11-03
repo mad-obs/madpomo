@@ -2,10 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit=cover lets the page draw under the notch and the home
+         indicator, which is the only reason env(safe-area-inset-*) in
+         mobile.css reports anything but 0. interactive-widget tells Android
+         Chrome to shrink the layout when the keyboard opens, so the two
+         bottom bars ride up with it the way they already do on iOS. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>madpomo</title>
     <meta name="description" content="A task board with a pomodoro timer built into it. It counts how many pomodoros you finish, not how many you start.">
+    <!-- the colour at the very top of the page, so the status bar matches the
+         header rather than the brand. One value, because the app is dark. -->
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="dark">
+    <!-- installed to a home screen: no browser chrome, and a status bar drawn
+         over the app instead of sitting in a strip of its own -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="madpomo">
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <link rel="manifest" href="./manifest.webmanifest">
 </head>
 <body>
     <div id="root"></div>

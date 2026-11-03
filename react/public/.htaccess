@@ -1,0 +1,68 @@
+# ==========================================================================
+# madpomo (React) — Apache config for HostGator shared hosting
+# ==========================================================================
+
+# --------------------------------------------------------------------------
+# Client-side routing
+#
+# This build routes on the URL hash (#/report, #/settings), so Apache is only
+# ever asked for index.html and these rules do not normally fire. They are
+# here so a path URL typed by hand, or a future switch to path routing,
+# still lands on the app instead of a 404.
+#
+# index.html is written without a leading slash on purpose: that resolves
+# against this folder, so it works whether the app sits at a subdomain root
+# or in a subfolder of the main site.
+# --------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # never rewrite a request for a file or folder that exists
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # a missing asset should stay a 404, not silently return the HTML page
+    RewriteCond %{REQUEST_URI} !\.(js|css|woff2|ico|png|jpg|svg|map|json)$
+
+    RewriteRule . index.html [L]
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType font/woff2 .woff2
+    AddType text/javascript .js
+    AddType application/json .json
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# --------------------------------------------------------------------------
+# Caching
+#
+# Vite puts a content hash in every asset filename, so a new build is a new
+# name and those can be cached for a year. index.html is the file that names
+# them, so it must never be cached.
+# --------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    <FilesMatch "^index\.html$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 week"
+</IfModule>
+
+Options -Indexes
+
+DirectoryIndex index.html
